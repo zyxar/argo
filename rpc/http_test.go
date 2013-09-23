@@ -1,4 +1,4 @@
-package argo
+package rpc
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-var client *HttpRpc
+var client *Client
 
 const (
 	server = "http://localhost:6800/jsonrpc"
 )
 
 func init() {
-	client = NewHttpRpc(server)
+	client = NewClient(server)
 }
 
 func TestA(t *testing.T) {

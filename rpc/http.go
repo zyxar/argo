@@ -1,4 +1,4 @@
-package argo
+package rpc
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ func (r *request) Pack() []byte {
 	return b
 }
 
-func (id *HttpRpc) AddUri(uri string, options ...interface{}) (gid string, err error) {
+func (id *Client) AddUri(uri string, options ...interface{}) (gid string, err error) {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -42,7 +42,7 @@ func (id *HttpRpc) AddUri(uri string, options ...interface{}) (gid string, err e
 	return
 }
 
-func (id *HttpRpc) AddTorrent(filename string, options ...interface{}) (gid string, err error) {
+func (id *Client) AddTorrent(filename string, options ...interface{}) (gid string, err error) {
 	co, err := ioutil.ReadFile(filename) // to base64
 	if err != nil {
 		return
@@ -75,7 +75,7 @@ func (id *HttpRpc) AddTorrent(filename string, options ...interface{}) (gid stri
 	return
 }
 
-func (id *HttpRpc) AddMetalink(uri string, options ...interface{}) (gid string, err error) {
+func (id *Client) AddMetalink(uri string, options ...interface{}) (gid string, err error) {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -103,7 +103,7 @@ func (id *HttpRpc) AddMetalink(uri string, options ...interface{}) (gid string, 
 	return
 }
 
-func (id *HttpRpc) Remove(gid string) (g string, err error) {
+func (id *Client) Remove(gid string) (g string, err error) {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -131,7 +131,7 @@ func (id *HttpRpc) Remove(gid string) (g string, err error) {
 	return
 }
 
-func (id *HttpRpc) ForceRemove(gid string) (g string, err error) {
+func (id *Client) ForceRemove(gid string) (g string, err error) {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -159,7 +159,7 @@ func (id *HttpRpc) ForceRemove(gid string) (g string, err error) {
 	return
 }
 
-func (id *HttpRpc) Pause(gid string) (g string, err error) {
+func (id *Client) Pause(gid string) (g string, err error) {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -187,7 +187,7 @@ func (id *HttpRpc) Pause(gid string) (g string, err error) {
 	return
 }
 
-func (id *HttpRpc) PauseAll() error {
+func (id *Client) PauseAll() error {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -204,7 +204,7 @@ func (id *HttpRpc) PauseAll() error {
 	return err
 }
 
-func (id *HttpRpc) ForcePause(gid string) (g string, err error) {
+func (id *Client) ForcePause(gid string) (g string, err error) {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -232,7 +232,7 @@ func (id *HttpRpc) ForcePause(gid string) (g string, err error) {
 	return
 }
 
-func (id *HttpRpc) Unpause(gid string) (g string, err error) {
+func (id *Client) Unpause(gid string) (g string, err error) {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -260,7 +260,7 @@ func (id *HttpRpc) Unpause(gid string) (g string, err error) {
 	return
 }
 
-func (id *HttpRpc) UnpauseAll() error {
+func (id *Client) UnpauseAll() error {
 	req := &request{
 		Version: "2.0",
 		Id:      "qwer",
@@ -277,7 +277,7 @@ func (id *HttpRpc) UnpauseAll() error {
 	return err
 }
 
-func (id *HttpRpc) TellStatus(gid string, keys ...string) error {
+func (id *Client) TellStatus(gid string, keys ...string) error {
 	pay := make([]interface{}, 1, len(keys)+1)
 	pay[0] = gid
 	for i, _ := range keys {

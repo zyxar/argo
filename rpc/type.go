@@ -1,4 +1,4 @@
-package argo
+package rpc
 
 type request struct {
 	Version string        `json:"jsonrpc"`
@@ -17,14 +17,10 @@ type response struct {
 	} `json:"error"`
 }
 
-type HttpRpc struct {
+type Client struct {
 	uri string
 }
 
-func NewHttpRpc(uri string) *HttpRpc {
-	return &HttpRpc{uri}
-}
-
-type WsRpc struct {
-	uri string
+func NewClient(uri string) *Client {
+	return &Client{uri}
 }
