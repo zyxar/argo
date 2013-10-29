@@ -32,7 +32,7 @@ func (id *Client) AddUri(uri string, options ...interface{}) (gid string, err er
 	params := make([]interface{}, 1, 2)
 	params[0] = []string{uri}
 	if options != nil {
-		params = append(params, options)
+		params = append(params, options...)
 	}
 	id.Lock()
 	err = Call(id.serverUrl, addUri, params, &gid)
@@ -66,7 +66,7 @@ func (id *Client) AddTorrent(filename string, options ...interface{}) (gid strin
 	params := make([]interface{}, 1, 2)
 	params[0] = string(file)
 	if options != nil {
-		params = append(params, options)
+		params = append(params, options...)
 	}
 	id.Lock()
 	err = Call(id.serverUrl, addTorrent, params, &gid)
@@ -90,7 +90,7 @@ func (id *Client) AddMetalink(uri string, options ...interface{}) (gid string, e
 	params := make([]interface{}, 1, 2)
 	params[0] = uri
 	if options != nil {
-		params = append(params, options)
+		params = append(params, options...)
 	}
 	id.Lock()
 	err = Call(id.serverUrl, addMetalink, params, &gid)
