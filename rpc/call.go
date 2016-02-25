@@ -3,9 +3,10 @@ package rpc
 import (
 	"bytes"
 	"errors"
-	"github.com/gorilla/rpc/v2/json2"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/gorilla/rpc/v2/json2"
 )
 
 func Call(address, method string, params, reply interface{}) error {
