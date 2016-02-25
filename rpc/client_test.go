@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"fmt"
+	"os/exec"
 	"testing"
 	"time"
 )
@@ -14,6 +15,9 @@ const (
 
 func init() {
 	rpc = New(serverUri)
+	if err := launchAria2cDaemon(); err != nil {
+		panic(err)
+	}
 }
 
 // func Test0(t *testing.T) {
@@ -22,22 +26,47 @@ func init() {
 // 	fmt.Printf("%s %v\n", reply, err)
 // }
 
-func TestA(t *testing.T) {
-	fmt.Println(rpc.GetVersion())
+func TestAll(t *testing.T) {
+	defer fmt.Println(rpc.ForceShutdown())
+	v, err := rpc.GetVersion()
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(v["version"])
 	g, err := rpc.AddUri("http://cran.rstudio.com/bin/macosx/R-3.0.1.pkg")
 	if err != nil {
-		t.Error(err.Error())
+		t.Error(err)
 	}
 	fmt.Println(g)
-	fmt.Println(rpc.TellActive())
-	// fmt.Println(rpc.ForcePause(g))
-	// fmt.Println(rpc.Unpause(g))
+	if _, err = rpc.TellActive(); err != nil {
+		t.Error(err)
+	}
 	time.Sleep(1 * time.Second)
-	fmt.Println(rpc.TellStatus(g))
-	// time.Sleep(1 * time.Second)
-	// fmt.Println(rpc.Pause(g))
+	if _, err = rpc.TellStatus(g); err != nil {
+		t.Error(err)
+	}
 	time.Sleep(1 * time.Second)
-	fmt.Println(rpc.PauseAll())
-	fmt.Println(rpc.Remove(g))
-	fmt.Println(rpc.TellActive())
+	if _, err = rpc.PauseAll(); err != nil {
+		t.Error(err)
+	}
+	if _, err = rpc.Remove(g); err != nil {
+		t.Error(err)
+	}
+	if _, err = rpc.TellActive(); err != nil {
+		t.Error(err)
+	}
+}
+
+func launchAria2cDaemon() (err error) {
+	if _, err = rpc.GetVersion(); err == nil {
+		return
+	}
+	cmd := exec.Command("aria2c", "--enable-rpc", "--rpc-listen-all")
+	if err = cmd.Start(); err != nil {
+		return err
+	}
+	cmd.Process.Release()
+	time.Sleep(1. * time.Second)
+	fmt.Println("aria2c started!")
+	return nil
 }
