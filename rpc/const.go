@@ -1,7 +1,7 @@
 package rpc
 
 const (
-	addUri               = "aria2.addUri"
+	addURI               = "aria2.addUri"
 	addTorrent           = "aria2.addTorrent"
 	addMetalink          = "aria2.addMetalink"
 	remove               = "aria2.remove"
@@ -21,7 +21,7 @@ const (
 	tellWaiting          = "aria2.tellWaiting"
 	tellStopped          = "aria2.tellStopped"
 	changePosition       = "aria2.changePosition"
-	changeUri            = "aria2.changeUri"
+	changeURI            = "aria2.changeUri"
 	getOption            = "aria2.getOption"
 	changeOption         = "aria2.changeOption"
 	getGlobalOption      = "aria2.getGlobalOption"

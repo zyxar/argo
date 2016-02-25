@@ -6,10 +6,12 @@ import (
 	"sync"
 )
 
+// Option is a container for specifying Call parameters and returning results
 type Option map[string]interface{}
 
-type RPCProto interface {
-	AddUri(uri string, options ...interface{}) (gid string, err error)
+// Protocol is a set of rpc methods that aria2 daemon supports
+type Protocol interface {
+	AddURI(uri string, options ...interface{}) (gid string, err error)
 	AddTorrent(filename string, options ...interface{}) (gid string, err error)
 	AddMetalink(uri string, options ...interface{}) (gid string, err error)
 	Remove(gid string) (g string, err error)
@@ -29,7 +31,7 @@ type RPCProto interface {
 	TellWaiting(offset, num int, keys ...string) (m []Option, err error)
 	TellStopped(offset, num int, keys ...string) (m []Option, err error)
 	ChangePosition(gid string, pos int, how string) (p int, err error)
-	ChangeUri(gid string, fileindex int, delUris []string, addUris []string, position ...int) (p []int, err error)
+	ChangeURI(gid string, fileindex int, delUris []string, addUris []string, position ...int) (p []int, err error)
 	GetOption(gid string) (m Option, err error)
 	ChangeOption(gid string, options Option) (g string, err error)
 	GetGlobalOption() (m Option, err error)
@@ -49,7 +51,8 @@ type client struct {
 	uri   string
 }
 
-func New(uri string) RPCProto {
+// New returns an instance of Protocol
+func New(uri string) Protocol {
 	return &client{uri: uri}
 }
 
@@ -72,14 +75,14 @@ func (id *client) unlock() {
 // If `position` is given as an integer starting from 0, the new download is inserted at position in the waiting queue.
 // If `position` is not given or `position` is larger than the size of the queue, it is appended at the end of the queue.
 // This method returns GID of registered download.
-func (id *client) AddUri(uri string, options ...interface{}) (gid string, err error) {
+func (id *client) AddURI(uri string, options ...interface{}) (gid string, err error) {
 	params := make([]interface{}, 1, 2)
 	params[0] = []string{uri}
 	if options != nil {
 		params = append(params, options...)
 	}
 	id.lock()
-	err = Call(id.uri, addUri, params, &gid)
+	err = Call(id.uri, addURI, params, &gid)
 	id.unlock()
 	return
 }
@@ -387,7 +390,7 @@ func (id *client) ChangePosition(gid string, pos int, how string) (p int, err er
 // This method returns a list which contains 2 integers.
 // The first integer is the number of URIs deleted.
 // The second integer is the number of URIs added.
-func (id *client) ChangeUri(gid string, fileindex int, delUris []string, addUris []string, position ...int) (p []int, err error) {
+func (id *client) ChangeURI(gid string, fileindex int, delUris []string, addUris []string, position ...int) (p []int, err error) {
 	params := make([]interface{}, 4, 5)
 	params[0] = gid
 	params[1] = fileindex
@@ -397,7 +400,7 @@ func (id *client) ChangeUri(gid string, fileindex int, delUris []string, addUris
 		params = append(params, position[0])
 	}
 	id.lock()
-	err = Call(id.uri, changeUri, params, &p)
+	err = Call(id.uri, changeURI, params, &p)
 	id.unlock()
 	return
 }

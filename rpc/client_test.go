@@ -9,7 +9,7 @@ import (
 
 const targetURL = "https://nodejs.org/dist/index.json"
 
-var rpc RPCProto
+var rpc Protocol
 
 func init() {
 	rpc = New("http://localhost:6800/jsonrpc")
@@ -20,7 +20,7 @@ func init() {
 
 func TestAll(t *testing.T) {
 	defer fmt.Println(rpc.ForceShutdown())
-	g, err := rpc.AddUri(targetURL)
+	g, err := rpc.AddURI(targetURL)
 	if err != nil {
 		t.Error(err)
 	}
@@ -31,7 +31,7 @@ func TestAll(t *testing.T) {
 	if _, err = rpc.PauseAll(); err != nil {
 		t.Error(err)
 	}
-	if o, err = rpc.TellStatus(g); err != nil {
+	if _, err = rpc.TellStatus(g); err != nil {
 		t.Error(err)
 	}
 	if _, err = rpc.Remove(g); err != nil {
