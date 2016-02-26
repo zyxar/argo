@@ -1,0 +1,11 @@
+language: go
+go:
+- 1.6
+- tip
+before_install:
+- sudo apt-get -qq update
+- sudo apt-get install -y aria2
+script: go test -v ./rpc
+notifications:
+  slack:
+    secure: gz1d/jtCR5RZEAJR8Exb1q3i8AQfdwgZXNNf1V8VMiXQAK6Od8kE9Vw2ixoeR9QlzznNaJbcVNJyu9xVkxOIWlTAEuJ0aAVt3a5zjsfv2ZzU361KLKNphVpT/Xfb22iKwP+y31ZR4EeFsObyebZfruqBVibifs7tF0aWw4H0lgc=
