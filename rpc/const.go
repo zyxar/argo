@@ -27,7 +27,7 @@ const (
 	aria2GetGlobalOption      = "aria2.getGlobalOption"
 	aria2ChangeGlobalOption   = "aria2.changeGlobalOption"
 	aria2GetGlobalStat        = "aria2.getGlobalStat"
-	aria2PurgeDowloadResult   = "aria2.purgeDowloadResult"
+	aria2PurgeDownloadResult  = "aria2.purgeDownloadResult"
 	aria2RemoveDownloadResult = "aria2.removeDownloadResult"
 	aria2GetVersion           = "aria2.getVersion"
 	aria2GetSessionInfo       = "aria2.getSessionInfo"

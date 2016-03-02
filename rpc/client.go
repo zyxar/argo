@@ -40,7 +40,7 @@ type Protocol interface {
 	GetGlobalOption() (m Option, err error)
 	ChangeGlobalOption(options Option) (g string, err error)
 	GetGlobalStat() (m Option, err error)
-	PurgeDowloadResult() (g string, err error)
+	PurgeDownloadResult() (g string, err error)
 	RemoveDownloadResult(gid string) (g string, err error)
 	GetVersion() (m Option, err error)
 	GetSessionInfo() (m Option, err error)
@@ -524,9 +524,9 @@ func (id *client) GetGlobalStat() (m Option, err error) {
 // `aria2.purgeDownloadResult()`
 // This method purges completed/error/removed downloads to free memory.
 // This method returns OK.
-func (id *client) PurgeDowloadResult() (g string, err error) {
+func (id *client) PurgeDownloadResult() (g string, err error) {
 	id.lock()
-	err = Call(id.uri, aria2PurgeDowloadResult, []interface{}{}, &g)
+	err = Call(id.uri, aria2PurgeDownloadResult, []interface{}{}, &g)
 	id.unlock()
 	return
 }
