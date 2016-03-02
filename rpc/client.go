@@ -3,7 +3,9 @@ package rpc
 import (
 	"encoding/base64"
 	"io/ioutil"
+	"os/exec"
 	"sync"
+	"time"
 )
 
 // Option is a container for specifying Call parameters and returning results
@@ -11,6 +13,7 @@ type Option map[string]interface{}
 
 // Protocol is a set of rpc methods that aria2 daemon supports
 type Protocol interface {
+	LaunchAria2cDaemon() (m Option, err error)
 	AddURI(uri string, options ...interface{}) (gid string, err error)
 	AddTorrent(filename string, options ...interface{}) (gid string, err error)
 	AddMetalink(uri string, options ...interface{}) (gid string, err error)
@@ -47,13 +50,20 @@ type Protocol interface {
 }
 
 type client struct {
-	mutex sync.Mutex
-	uri   string
+	mutex  sync.Mutex
+	uri    string
+	secret string
 }
 
 // New returns an instance of Protocol
-func New(uri string) Protocol {
-	return &client{uri: uri}
+func New(s ...string) Protocol {
+	switch len(s) {
+	case 0:
+		return nil
+	case 1:
+		return &client{uri: s[0]}
+	}
+	return &client{uri: s[0], secret: s[1]}
 }
 
 func (id *client) lock() {
@@ -62,6 +72,25 @@ func (id *client) lock() {
 
 func (id *client) unlock() {
 	id.mutex.Unlock()
+}
+
+// LaunchAria2cDaemon launchs aria2 daemon to listen for RPC calls, locally.
+func (id *client) LaunchAria2cDaemon() (m Option, err error) {
+	if m, err = id.GetVersion(); err == nil {
+		return
+	}
+	args := []string{"--enable-rpc", "--rpc-listen-all"}
+	if len(id.secret) > 0 {
+		args = append(args, "--rpc-secret="+id.secret)
+	}
+	cmd := exec.Command("aria2c", args...)
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	cmd.Process.Release()
+	time.Sleep(1 * time.Second)
+	m, err = id.GetVersion()
+	return
 }
 
 // `aria2.addUri(uris[, options[, position]])`

@@ -2,9 +2,7 @@ package rpc
 
 import (
 	"fmt"
-	"os/exec"
 	"testing"
-	"time"
 )
 
 const targetURL = "https://nodejs.org/dist/index.json"
@@ -13,8 +11,10 @@ var rpc Protocol
 
 func init() {
 	rpc = New("http://localhost:6800/jsonrpc")
-	if err := launchAria2cDaemon(); err != nil {
+	if msg, err := rpc.LaunchAria2cDaemon(); err != nil {
 		panic(err)
+	} else {
+		fmt.Println("aria2c", msg["version"], "started!")
 	}
 }
 
@@ -40,22 +40,4 @@ func TestAll(t *testing.T) {
 	if _, err = rpc.TellActive(); err != nil {
 		t.Error(err)
 	}
-}
-
-func launchAria2cDaemon() (err error) {
-	if _, err = rpc.GetVersion(); err == nil {
-		return
-	}
-	cmd := exec.Command("aria2c", "--enable-rpc", "--rpc-listen-all")
-	if err = cmd.Start(); err != nil {
-		return err
-	}
-	cmd.Process.Release()
-	time.Sleep(1 * time.Second)
-	v, err := rpc.GetVersion()
-	if err != nil {
-		return
-	}
-	fmt.Println("aria2c", v["version"], "started!")
-	return nil
 }
