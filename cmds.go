@@ -266,7 +266,7 @@ var (
 			err = errNotSupportedCmd
 			return
 		},
-		"getoption": func(s ...string) (b []byte, err error) {
+		"option": func(s ...string) (b []byte, err error) {
 			if len(s) == 0 {
 				err = errParameter
 				return
@@ -294,7 +294,7 @@ var (
 			err = errNotSupportedCmd
 			return
 		},
-		"globalstat": func(s ...string) (b []byte, err error) {
+		"stat": func(s ...string) (b []byte, err error) {
 			msg, err := rpcc.GetGlobalStat()
 			if err != nil {
 				return
@@ -346,7 +346,7 @@ var (
 			b = []byte(msg)
 			return
 		},
-		"kill": func(s ...string) (b []byte, err error) {
+		"forceshutdown": func(s ...string) (b []byte, err error) {
 			msg, err := rpcc.ForceShutdown()
 			if err != nil {
 				return
