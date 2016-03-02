@@ -23,7 +23,7 @@ type Protocol interface {
 	Unpause(gid string) (g string, err error)
 	UnpauseAll() (g string, err error)
 	TellStatus(gid string, keys ...string) (m Option, err error)
-	GetUris(gid string) (m Option, err error)
+	GetURIs(gid string) (m Option, err error)
 	GetFiles(gid string) (m Option, err error)
 	GetPeers(gid string) (m []Option, err error)
 	GetServers(gid string) (m []Option, err error)
@@ -82,7 +82,7 @@ func (id *client) AddURI(uri string, options ...interface{}) (gid string, err er
 		params = append(params, options...)
 	}
 	id.lock()
-	err = Call(id.uri, addURI, params, &gid)
+	err = Call(id.uri, aria2AddURI, params, &gid)
 	id.unlock()
 	return
 }
@@ -116,7 +116,7 @@ func (id *client) AddTorrent(filename string, options ...interface{}) (gid strin
 		params = append(params, options...)
 	}
 	id.lock()
-	err = Call(id.uri, addTorrent, params, &gid)
+	err = Call(id.uri, aria2AddTorrent, params, &gid)
 	id.unlock()
 	return
 }
@@ -140,7 +140,7 @@ func (id *client) AddMetalink(uri string, options ...interface{}) (gid string, e
 		params = append(params, options...)
 	}
 	id.lock()
-	err = Call(id.uri, addMetalink, params, &gid)
+	err = Call(id.uri, aria2AddMetalink, params, &gid)
 	id.unlock()
 	return
 }
@@ -153,7 +153,7 @@ func (id *client) AddMetalink(uri string, options ...interface{}) (gid string, e
 // This method returns GID of removed download.
 func (id *client) Remove(gid string) (g string, err error) {
 	id.lock()
-	err = Call(id.uri, remove, []interface{}{gid}, &g)
+	err = Call(id.uri, aria2Remove, []interface{}{gid}, &g)
 	id.unlock()
 	return
 }
@@ -163,7 +163,7 @@ func (id *client) Remove(gid string) (g string, err error) {
 // This method behaves just like aria2.remove() except that this method removes download without any action which takes time such as contacting BitTorrent tracker.
 func (id *client) ForceRemove(gid string) (g string, err error) {
 	id.lock()
-	err = Call(id.uri, forceRemove, []interface{}{gid}, &g)
+	err = Call(id.uri, aria2ForceRemove, []interface{}{gid}, &g)
 	id.unlock()
 	return
 }
@@ -178,7 +178,7 @@ func (id *client) ForceRemove(gid string) (g string, err error) {
 // This method returns GID of paused download.
 func (id *client) Pause(gid string) (g string, err error) {
 	id.lock()
-	err = Call(id.uri, pause, []interface{}{gid}, &g)
+	err = Call(id.uri, aria2Pause, []interface{}{gid}, &g)
 	id.unlock()
 	return
 }
@@ -188,7 +188,7 @@ func (id *client) Pause(gid string) (g string, err error) {
 // This methods returns OK for success.
 func (id *client) PauseAll() (g string, err error) {
 	id.lock()
-	err = Call(id.uri, pauseAll, []interface{}{}, &g)
+	err = Call(id.uri, aria2PauseAll, []interface{}{}, &g)
 	id.unlock()
 	return
 }
@@ -198,7 +198,7 @@ func (id *client) PauseAll() (g string, err error) {
 // This method behaves just like aria2.pause() except that this method pauses download without any action which takes time such as contacting BitTorrent tracker.
 func (id *client) ForcePause(gid string) (g string, err error) {
 	id.lock()
-	err = Call(id.uri, forcePause, []interface{}{gid}, &g)
+	err = Call(id.uri, aria2ForcePause, []interface{}{gid}, &g)
 	id.unlock()
 	return
 }
@@ -208,7 +208,7 @@ func (id *client) ForcePause(gid string) (g string, err error) {
 // This methods returns OK for success.
 func (id *client) ForcePauseAll() (g string, err error) {
 	id.lock()
-	err = Call(id.uri, forcePauseAll, []interface{}{}, &g)
+	err = Call(id.uri, aria2ForcePauseAll, []interface{}{}, &g)
 	id.unlock()
 	return
 }
@@ -220,7 +220,7 @@ func (id *client) ForcePauseAll() (g string, err error) {
 // This method returns GID of unpaused download.
 func (id *client) Unpause(gid string) (g string, err error) {
 	id.lock()
-	err = Call(id.uri, unpause, []interface{}{gid}, &g)
+	err = Call(id.uri, aria2Unpause, []interface{}{gid}, &g)
 	id.unlock()
 	return
 }
@@ -230,7 +230,7 @@ func (id *client) Unpause(gid string) (g string, err error) {
 // This methods returns OK for success.
 func (id *client) UnpauseAll() (g string, err error) {
 	id.lock()
-	err = Call(id.uri, unpauseAll, []interface{}{}, &g)
+	err = Call(id.uri, aria2UnpauseAll, []interface{}{}, &g)
 	id.unlock()
 	return
 }
@@ -250,7 +250,7 @@ func (id *client) TellStatus(gid string, keys ...string) (m Option, err error) {
 		params = append(params, keys)
 	}
 	id.lock()
-	err = Call(id.uri, tellStatus, params, &m)
+	err = Call(id.uri, aria2TellStatus, params, &m)
 	id.unlock()
 	return
 }
@@ -258,9 +258,9 @@ func (id *client) TellStatus(gid string, keys ...string) (m Option, err error) {
 // `aria2.getUris(gid)`
 // This method returns URIs used in the download denoted by `gid`.
 // `gid` is of type string.
-func (id *client) GetUris(gid string) (m Option, err error) {
+func (id *client) GetURIs(gid string) (m Option, err error) {
 	id.lock()
-	err = Call(id.uri, getUris, []interface{}{gid}, &m)
+	err = Call(id.uri, aria2GetURIs, []interface{}{gid}, &m)
 	id.unlock()
 	return
 }
@@ -270,7 +270,7 @@ func (id *client) GetUris(gid string) (m Option, err error) {
 // `gid` is of type string.
 func (id *client) GetFiles(gid string) (m Option, err error) {
 	id.lock()
-	err = Call(id.uri, getFiles, []interface{}{gid}, &m)
+	err = Call(id.uri, aria2GetFiles, []interface{}{gid}, &m)
 	id.unlock()
 	return
 }
@@ -281,7 +281,7 @@ func (id *client) GetFiles(gid string) (m Option, err error) {
 // This method is for BitTorrent only.
 func (id *client) GetPeers(gid string) (m []Option, err error) {
 	id.lock()
-	err = Call(id.uri, getPeers, []interface{}{gid}, &m)
+	err = Call(id.uri, aria2GetPeers, []interface{}{gid}, &m)
 	id.unlock()
 	return
 }
@@ -291,7 +291,7 @@ func (id *client) GetPeers(gid string) (m []Option, err error) {
 // `gid` is of type string.
 func (id *client) GetServers(gid string) (m []Option, err error) {
 	id.lock()
-	err = Call(id.uri, getServers, []interface{}{gid}, &m)
+	err = Call(id.uri, aria2GetServers, []interface{}{gid}, &m)
 	id.unlock()
 	return
 }
@@ -302,7 +302,7 @@ func (id *client) GetServers(gid string) (m []Option, err error) {
 // For `keys` parameter, please refer to `aria2.tellStatus()` method.
 func (id *client) TellActive(keys ...string) (m []Option, err error) {
 	id.lock()
-	err = Call(id.uri, tellActive, []interface{}{}, &m)
+	err = Call(id.uri, aria2TellActive, []interface{}{}, &m)
 	id.unlock()
 	return
 }
@@ -329,7 +329,7 @@ func (id *client) TellWaiting(offset, num int, keys ...string) (m []Option, err 
 		params = append(params, keys)
 	}
 	id.lock()
-	err = Call(id.uri, tellWaiting, params, &m)
+	err = Call(id.uri, aria2TellWaiting, params, &m)
 	id.unlock()
 	return
 }
@@ -349,7 +349,7 @@ func (id *client) TellStopped(offset, num int, keys ...string) (m []Option, err 
 		params = append(params, keys)
 	}
 	id.lock()
-	err = Call(id.uri, tellStopped, params, &m)
+	err = Call(id.uri, aria2TellStopped, params, &m)
 	id.unlock()
 	return
 }
@@ -369,7 +369,7 @@ func (id *client) ChangePosition(gid string, pos int, how string) (p int, err er
 	params[1] = pos
 	params[2] = how
 	id.lock()
-	err = Call(id.uri, tellStatus, params, &p)
+	err = Call(id.uri, aria2ChangePosition, params, &p)
 	id.unlock()
 	return
 }
@@ -400,7 +400,7 @@ func (id *client) ChangeURI(gid string, fileindex int, delUris []string, addUris
 		params = append(params, position[0])
 	}
 	id.lock()
-	err = Call(id.uri, changeURI, params, &p)
+	err = Call(id.uri, aria2ChangeURI, params, &p)
 	id.unlock()
 	return
 }
@@ -413,7 +413,7 @@ func (id *client) ChangeURI(gid string, fileindex int, delUris []string, addUris
 // Note that this method does not return options which have no default value and have not been set by the command-line options, configuration files or RPC methods.
 func (id *client) GetOption(gid string) (m Option, err error) {
 	id.lock()
-	err = Call(id.uri, getOption, []interface{}{gid}, &m)
+	err = Call(id.uri, aria2GetOption, []interface{}{gid}, &m)
 	id.unlock()
 	return
 }
@@ -438,7 +438,7 @@ func (id *client) ChangeOption(gid string, option Option) (g string, err error) 
 		params = append(params, option)
 	}
 	id.lock()
-	err = Call(id.uri, changeOption, params, &g)
+	err = Call(id.uri, aria2ChangeOption, params, &g)
 	id.unlock()
 	return
 }
@@ -452,7 +452,7 @@ func (id *client) ChangeOption(gid string, option Option) (g string, err error) 
 // Because global options are used as a template for the options of newly added download, the response contains keys returned by `aria2.getOption()` method.
 func (id *client) GetGlobalOption() (m Option, err error) {
 	id.lock()
-	err = Call(id.uri, getGlobalOption, []interface{}{}, &m)
+	err = Call(id.uri, aria2GetGlobalOption, []interface{}{}, &m)
 	id.unlock()
 	return
 }
@@ -478,7 +478,7 @@ func (id *client) GetGlobalOption() (m Option, err error) {
 // This method returns OK for success.
 func (id *client) ChangeGlobalOption(options Option) (g string, err error) {
 	id.lock()
-	err = Call(id.uri, changeGlobalOption, []interface{}{options}, &g)
+	err = Call(id.uri, aria2ChangeGlobalOption, []interface{}{options}, &g)
 	id.unlock()
 	return
 }
@@ -487,7 +487,7 @@ func (id *client) ChangeGlobalOption(options Option) (g string, err error) {
 // This method returns global statistics such as overall download and upload speed.
 func (id *client) GetGlobalStat() (m Option, err error) {
 	id.lock()
-	err = Call(id.uri, getGlobalStat, []interface{}{}, &m)
+	err = Call(id.uri, aria2GetGlobalStat, []interface{}{}, &m)
 	id.unlock()
 	return
 }
@@ -497,7 +497,7 @@ func (id *client) GetGlobalStat() (m Option, err error) {
 // This method returns OK.
 func (id *client) PurgeDowloadResult() (g string, err error) {
 	id.lock()
-	err = Call(id.uri, purgeDowloadResult, []interface{}{}, &g)
+	err = Call(id.uri, aria2PurgeDowloadResult, []interface{}{}, &g)
 	id.unlock()
 	return
 }
@@ -507,7 +507,7 @@ func (id *client) PurgeDowloadResult() (g string, err error) {
 // This method returns OK for success.
 func (id *client) RemoveDownloadResult(gid string) (g string, err error) {
 	id.lock()
-	err = Call(id.uri, removeDownloadResult, []interface{}{gid}, &g)
+	err = Call(id.uri, aria2RemoveDownloadResult, []interface{}{gid}, &g)
 	id.unlock()
 	return
 }
@@ -516,7 +516,7 @@ func (id *client) RemoveDownloadResult(gid string) (g string, err error) {
 // This method returns version of the program and the list of enabled features.
 func (id *client) GetVersion() (m Option, err error) {
 	id.lock()
-	err = Call(id.uri, getVersion, []interface{}{}, &m)
+	err = Call(id.uri, aria2GetVersion, []interface{}{}, &m)
 	id.unlock()
 	return
 }
@@ -525,7 +525,7 @@ func (id *client) GetVersion() (m Option, err error) {
 // This method returns session information.
 func (id *client) GetSessionInfo() (m Option, err error) {
 	id.lock()
-	err = Call(id.uri, getSessionInfo, []interface{}{}, &m)
+	err = Call(id.uri, aria2GetSessionInfo, []interface{}{}, &m)
 	id.unlock()
 	return
 }
@@ -535,7 +535,7 @@ func (id *client) GetSessionInfo() (m Option, err error) {
 // This method returns OK.
 func (id *client) Shutdown() (g string, err error) {
 	id.lock()
-	err = Call(id.uri, shutdown, []interface{}{}, &g)
+	err = Call(id.uri, aria2Shutdown, []interface{}{}, &g)
 	id.unlock()
 	return
 }
@@ -546,7 +546,7 @@ func (id *client) Shutdown() (g string, err error) {
 // This method returns OK.
 func (id *client) ForceShutdown() (g string, err error) {
 	id.lock()
-	err = Call(id.uri, forceShutdown, []interface{}{}, &g)
+	err = Call(id.uri, aria2ForceShutdown, []interface{}{}, &g)
 	id.unlock()
 	return
 }
@@ -560,7 +560,7 @@ func (id *client) ForceShutdown() (g string, err error) {
 // The element of array will either be a one-item array containing the return value of each method call or struct of fault element if an encapsulated method call fails.
 func (id *client) Multicall(methods []Option) (r []interface{}, err error) {
 	id.lock()
-	err = Call(id.uri, multicall, methods, &r)
+	err = Call(id.uri, aria2Multicall, methods, &r)
 	id.unlock()
 	return
 }
