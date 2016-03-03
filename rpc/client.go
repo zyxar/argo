@@ -12,46 +12,6 @@ import (
 // Option is a container for specifying Call parameters and returning results
 type Option map[string]interface{}
 
-// Protocol is a set of rpc methods that aria2 daemon supports
-type Protocol interface {
-	LaunchAria2cDaemon() (info VersionInfo, err error)
-	AddURI(uri string, options ...interface{}) (gid string, err error)
-	AddTorrent(filename string, options ...interface{}) (gid string, err error)
-	AddMetalink(uri string, options ...interface{}) (gid string, err error)
-	Remove(gid string) (g string, err error)
-	ForceRemove(gid string) (g string, err error)
-	Pause(gid string) (g string, err error)
-	PauseAll() (ok string, err error)
-	ForcePause(gid string) (g string, err error)
-	ForcePauseAll() (ok string, err error)
-	Unpause(gid string) (g string, err error)
-	UnpauseAll() (ok string, err error)
-	TellStatus(gid string, keys ...string) (info StatusInfo, err error)
-	GetURIs(gid string) (infos []URIInfo, err error)
-	GetFiles(gid string) (infos []FileInfo, err error)
-	GetPeers(gid string) (infos []PeerInfo, err error)
-	GetServers(gid string) (infos []ServerInfo, err error)
-	TellActive(keys ...string) (infos []StatusInfo, err error)
-	TellWaiting(offset, num int, keys ...string) (infos []StatusInfo, err error)
-	TellStopped(offset, num int, keys ...string) (infos []StatusInfo, err error)
-	ChangePosition(gid string, pos int, how string) (p int, err error)
-	ChangeURI(gid string, fileindex int, delUris []string, addUris []string, position ...int) (p []int, err error)
-	GetOption(gid string) (m Option, err error)
-	ChangeOption(gid string, option Option) (ok string, err error)
-	GetGlobalOption() (m Option, err error)
-	ChangeGlobalOption(options Option) (ok string, err error)
-	GetGlobalStat() (info GlobalStatInfo, err error)
-	PurgeDownloadResult() (ok string, err error)
-	RemoveDownloadResult(gid string) (ok string, err error)
-	GetVersion() (info VersionInfo, err error)
-	GetSessionInfo() (info SessionInfo, err error)
-	Shutdown() (ok string, err error)
-	ForceShutdown() (ok string, err error)
-	SaveSession() (ok string, err error)
-	Multicall(methods []Method) (r []interface{}, err error)
-	ListMethods() (methods []string, err error)
-}
-
 type client struct {
 	mutex sync.Mutex
 	uri   string
@@ -108,13 +68,13 @@ func (id *client) LaunchAria2cDaemon() (info VersionInfo, err error) {
 // If position is omitted or position is larger than the current size of the queue, the new download is appended to the end of the queue.
 // This method returns the GID of the newly registered download.
 func (id *client) AddURI(uri string, options ...interface{}) (gid string, err error) {
-	params := make([]interface{}, 1, 2)
-	params[0] = []string{uri}
-	if options != nil {
-		params = append(params, options...)
-	}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	params = append(params, []string{uri})
+	if options != nil {
+		params = append(params, options...)
 	}
 	id.lock()
 	err = Call(id.uri, aria2AddURI, params, &gid)
@@ -143,13 +103,13 @@ func (id *client) AddTorrent(filename string, options ...interface{}) (gid strin
 		return
 	}
 	file := base64.StdEncoding.EncodeToString(co)
-	params := make([]interface{}, 1, 2)
-	params[0] = string(file)
-	if options != nil {
-		params = append(params, options...)
-	}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	params = append(params, []string{string(file)})
+	if options != nil {
+		params = append(params, options...)
 	}
 	id.lock()
 	err = Call(id.uri, aria2AddTorrent, params, &gid)
@@ -170,13 +130,13 @@ func (id *client) AddTorrent(filename string, options ...interface{}) (gid strin
 // If a file with the same name already exists, it is overwritten!
 // If the file cannot be saved successfully or --rpc-save-upload-metadata is false, the downloads added by this method are not saved by --save-session.
 func (id *client) AddMetalink(uri string, options ...interface{}) (gid string, err error) {
-	params := make([]interface{}, 1, 2)
-	params[0] = uri
-	if options != nil {
-		params = append(params, options...)
-	}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	params = append(params, []string{uri})
+	if options != nil {
+		params = append(params, options...)
 	}
 	id.lock()
 	err = Call(id.uri, aria2AddMetalink, params, &gid)
@@ -190,10 +150,11 @@ func (id *client) AddMetalink(uri string, options ...interface{}) (gid string, e
 // The status of the removed download becomes removed.
 // This method returns GID of removed download.
 func (id *client) Remove(gid string) (g string, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2Remove, params, &g)
 	id.unlock()
@@ -204,10 +165,11 @@ func (id *client) Remove(gid string) (g string, err error) {
 // This method removes the download denoted by gid.
 // This method behaves just like aria2.remove() except that this method removes the download without performing any actions which take time, such as contacting BitTorrent trackers to unregister the download first.
 func (id *client) ForceRemove(gid string) (g string, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2ForceRemove, params, &g)
 	id.unlock()
@@ -222,10 +184,11 @@ func (id *client) ForceRemove(gid string) (g string, err error) {
 // To change status to waiting, use the aria2.unpause() method.
 // This method returns GID of paused download.
 func (id *client) Pause(gid string) (g string, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2Pause, params, &g)
 	id.unlock()
@@ -236,7 +199,7 @@ func (id *client) Pause(gid string) (g string, err error) {
 // This method is equal to calling aria2.pause() for every active/waiting download.
 // This methods returns OK.
 func (id *client) PauseAll() (ok string, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -250,10 +213,11 @@ func (id *client) PauseAll() (ok string, err error) {
 // This method pauses the download denoted by gid.
 // This method behaves just like aria2.pause() except that this method pauses downloads without performing any actions which take time, such as contacting BitTorrent trackers to unregister the download first.
 func (id *client) ForcePause(gid string) (g string, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2ForcePause, params, &g)
 	id.unlock()
@@ -264,7 +228,7 @@ func (id *client) ForcePause(gid string) (g string, err error) {
 // This method is equal to calling aria2.forcePause() for every active/waiting download.
 // This methods returns OK.
 func (id *client) ForcePauseAll() (ok string, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -278,10 +242,11 @@ func (id *client) ForcePauseAll() (ok string, err error) {
 // This method changes the status of the download denoted by gid (string) from paused to waiting, making the download eligible to be restarted.
 // This method returns the GID of the unpaused download.
 func (id *client) Unpause(gid string) (g string, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2Unpause, params, &g)
 	id.unlock()
@@ -292,7 +257,7 @@ func (id *client) Unpause(gid string) (g string, err error) {
 // This method is equal to calling aria2.unpause() for every active/waiting download.
 // This methods returns OK.
 func (id *client) UnpauseAll() (ok string, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -312,13 +277,13 @@ func (id *client) UnpauseAll() (ok string, err error) {
 // The response is a struct and contains following keys. Values are strings.
 // https://aria2.github.io/manual/en/html/aria2c.html#aria2.tellStatus
 func (id *client) TellStatus(gid string, keys ...string) (info StatusInfo, err error) {
-	params := make([]interface{}, 1, 2)
-	params[0] = gid
-	if keys != nil {
-		params = append(params, keys)
-	}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	params = append(params, gid)
+	if keys != nil {
+		params = append(params, keys)
 	}
 	id.lock()
 	err = Call(id.uri, aria2TellStatus, params, &info)
@@ -332,10 +297,11 @@ func (id *client) TellStatus(gid string, keys ...string) (info StatusInfo, err e
 // 	uri        URI
 // 	status    'used' if the URI is in use. 'waiting' if the URI is still waiting in the queue.
 func (id *client) GetURIs(gid string) (infos []URIInfo, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2GetURIs, params, &infos)
 	id.unlock()
@@ -347,10 +313,11 @@ func (id *client) GetURIs(gid string) (infos []URIInfo, err error) {
 // The response is an array of structs which contain following keys. Values are strings.
 // https://aria2.github.io/manual/en/html/aria2c.html#aria2.getFiles
 func (id *client) GetFiles(gid string) (infos []FileInfo, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2GetFiles, params, &infos)
 	id.unlock()
@@ -363,10 +330,11 @@ func (id *client) GetFiles(gid string) (infos []FileInfo, err error) {
 // The response is an array of structs and contains the following keys. Values are strings.
 // https://aria2.github.io/manual/en/html/aria2c.html#aria2.getPeers
 func (id *client) GetPeers(gid string) (infos []PeerInfo, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2GetPeers, params, &infos)
 	id.unlock()
@@ -378,10 +346,11 @@ func (id *client) GetPeers(gid string) (infos []PeerInfo, err error) {
 // The response is an array of structs and contains the following keys. Values are strings.
 // https://aria2.github.io/manual/en/html/aria2c.html#aria2.getServers
 func (id *client) GetServers(gid string) (infos []ServerInfo, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2GetServers, params, &infos)
 	id.unlock()
@@ -394,11 +363,11 @@ func (id *client) GetServers(gid string) (infos []ServerInfo, err error) {
 // For the keys parameter, please refer to the aria2.tellStatus() method.
 func (id *client) TellActive(keys ...string) (infos []StatusInfo, err error) {
 	params := make([]interface{}, 0, 1)
-	if keys != nil {
-		params = append(params, keys)
-	}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	if keys != nil {
+		params = append(params, keys)
 	}
 	id.lock()
 	err = Call(id.uri, aria2TellActive, params, &infos)
@@ -420,14 +389,14 @@ func (id *client) TellActive(keys ...string) (infos []StatusInfo, err error) {
 // aria2.tellWaiting(-1, 2) returns ["C", "B"].
 // The response is an array of the same structs as returned by aria2.tellStatus() method.
 func (id *client) TellWaiting(offset, num int, keys ...string) (infos []StatusInfo, err error) {
-	params := make([]interface{}, 2, 3)
-	params[0] = offset
-	params[1] = num
-	if keys != nil {
-		params = append(params, keys)
-	}
+	params := make([]interface{}, 0, 3)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	params = append(params, offset)
+	params = append(params, num)
+	if keys != nil {
+		params = append(params, keys)
 	}
 	id.lock()
 	err = Call(id.uri, aria2TellWaiting, params, &infos)
@@ -443,14 +412,14 @@ func (id *client) TellWaiting(offset, num int, keys ...string) (infos []StatusIn
 // offset and num have the same semantics as described in the aria2.tellWaiting() method.
 // The response is an array of the same structs as returned by the aria2.tellStatus() method.
 func (id *client) TellStopped(offset, num int, keys ...string) (infos []StatusInfo, err error) {
-	params := make([]interface{}, 2, 3)
-	params[0] = offset
-	params[1] = num
-	if keys != nil {
-		params = append(params, keys)
-	}
+	params := make([]interface{}, 0, 3)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	params = append(params, offset)
+	params = append(params, num)
+	if keys != nil {
+		params = append(params, keys)
 	}
 	id.lock()
 	err = Call(id.uri, aria2TellStopped, params, &infos)
@@ -468,13 +437,13 @@ func (id *client) TellStopped(offset, num int, keys ...string) (infos []StatusIn
 // The response is an integer denoting the resulting position.
 // For example, if GID#2089b05ecca3d829 is currently in position 3, aria2.changePosition('2089b05ecca3d829', -1, 'POS_CUR') will change its position to 2. Additionally aria2.changePosition('2089b05ecca3d829', 0, 'POS_SET') will change its position to 0 (the beginning of the queue).
 func (id *client) ChangePosition(gid string, pos int, how string) (p int, err error) {
-	params := make([]interface{}, 3)
-	params[0] = gid
-	params[1] = pos
-	params[2] = how
+	params := make([]interface{}, 0, 3)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
+	params = append(params, pos)
+	params = append(params, how)
 	id.lock()
 	err = Call(id.uri, aria2ChangePosition, params, &p)
 	id.unlock()
@@ -496,16 +465,16 @@ func (id *client) ChangePosition(gid string, pos int, how string) (p int, err er
 // The first integer is the number of URIs deleted.
 // The second integer is the number of URIs added.
 func (id *client) ChangeURI(gid string, fileindex int, delUris []string, addUris []string, position ...int) (p []int, err error) {
-	params := make([]interface{}, 4, 5)
-	params[0] = gid
-	params[1] = fileindex
-	params[2] = delUris
-	params[3] = addUris
-	if position != nil {
-		params = append(params, position[0])
-	}
+	params := make([]interface{}, 0, 5)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	params = append(params, gid)
+	params = append(params, fileindex)
+	params = append(params, delUris)
+	params = append(params, addUris)
+	if position != nil {
+		params = append(params, position[0])
 	}
 	id.lock()
 	err = Call(id.uri, aria2ChangeURI, params, &p)
@@ -519,10 +488,11 @@ func (id *client) ChangeURI(gid string, fileindex int, delUris []string, addUris
 // The values are strings.
 // Note that this method does not return options which have no default value and have not been set on the command-line, in configuration files or RPC methods.
 func (id *client) GetOption(gid string) (m Option, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2GetOption, params, &m)
 	id.unlock()
@@ -541,13 +511,13 @@ func (id *client) GetOption(gid string) (m Option, err error) {
 // For waiting or paused downloads, in addition to the above options, options listed in Input File subsection are available, except for following options: dry-run, metalink-base-uri, parameterized-uri, pause, piece-length and rpc-save-upload-metadata option.
 // This method returns OK for success.
 func (id *client) ChangeOption(gid string, option Option) (ok string, err error) {
-	params := make([]interface{}, 1, 2)
-	params[0] = gid
-	if option != nil {
-		params = append(params, option)
-	}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
+	}
+	params = append(params, gid)
+	if option != nil {
+		params = append(params, option)
 	}
 	id.lock()
 	err = Call(id.uri, aria2ChangeOption, params, &ok)
@@ -562,7 +532,7 @@ func (id *client) ChangeOption(gid string, option Option) (ok string, err error)
 // Values are strings.
 // Note that this method does not return options which have no default value and have not been set on the command-line, in configuration files or RPC methods. Because global options are used as a template for the options of newly added downloads, the response contains keys returned by the aria2.getOption() method.
 func (id *client) GetGlobalOption() (m Option, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -593,10 +563,11 @@ func (id *client) GetGlobalOption() (m Option, err error) {
 // Note that log file is always opened in append mode.
 // This method returns OK for success.
 func (id *client) ChangeGlobalOption(options Option) (ok string, err error) {
-	params := []interface{}{options}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, options)
 	id.lock()
 	err = Call(id.uri, aria2ChangeGlobalOption, params, &ok)
 	id.unlock()
@@ -614,7 +585,7 @@ func (id *client) ChangeGlobalOption(options Option) (ok string, err error) {
 //                     This value is capped by the --max-download-result option.
 // 	numStoppedTotal    The number of stopped downloads in the current session and not capped by the --max-download-result option.
 func (id *client) GetGlobalStat() (info GlobalStatInfo, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -628,7 +599,7 @@ func (id *client) GetGlobalStat() (info GlobalStatInfo, err error) {
 // This method purges completed/error/removed downloads to free memory.
 // This method returns OK.
 func (id *client) PurgeDownloadResult() (ok string, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -642,10 +613,11 @@ func (id *client) PurgeDownloadResult() (ok string, err error) {
 // This method removes a completed/error/removed download denoted by gid from memory.
 // This method returns OK for success.
 func (id *client) RemoveDownloadResult(gid string) (ok string, err error) {
-	params := []interface{}{gid}
+	params := make([]interface{}, 0, 2)
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
+	params = append(params, gid)
 	id.lock()
 	err = Call(id.uri, aria2RemoveDownloadResult, params, &ok)
 	id.unlock()
@@ -658,7 +630,7 @@ func (id *client) RemoveDownloadResult(gid string) (ok string, err error) {
 // 	version            Version number of aria2 as a string.
 // 	enabledFeatures    List of enabled features. Each feature is given as a string.
 func (id *client) GetVersion() (info VersionInfo, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -673,7 +645,7 @@ func (id *client) GetVersion() (info VersionInfo, err error) {
 // The response is a struct and contains following key.
 // 	sessionId    Session ID, which is generated each time when aria2 is invoked.
 func (id *client) GetSessionInfo() (info SessionInfo, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -687,7 +659,7 @@ func (id *client) GetSessionInfo() (info SessionInfo, err error) {
 // This method shutdowns aria2.
 // This method returns OK.
 func (id *client) Shutdown() (ok string, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -702,7 +674,7 @@ func (id *client) Shutdown() (ok string, err error) {
 // This method behaves like :func:'aria2.shutdown` without performing any actions which take time, such as contacting BitTorrent trackers to unregister downloads first.
 // This method returns OK.
 func (id *client) ForceShutdown() (ok string, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -716,7 +688,7 @@ func (id *client) ForceShutdown() (ok string, err error) {
 // This method saves the current session to a file specified by the --save-session option.
 // This method returns OK if it succeeds.
 func (id *client) SaveSession() (ok string, err error) {
-	params := []interface{}{}
+	params := []string{}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
@@ -750,7 +722,7 @@ func (id *client) Multicall(methods []Method) (r []interface{}, err error) {
 // This is safe because this method jsut returns the available method names.
 func (id *client) ListMethods() (methods []string, err error) {
 	id.lock()
-	err = Call(id.uri, aria2ListMethods, []interface{}{}, &methods)
+	err = Call(id.uri, aria2ListMethods, []string{}, &methods)
 	id.unlock()
 	return
 }
