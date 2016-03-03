@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"encoding/base64"
+	"errors"
 	"io/ioutil"
 	"os/exec"
 	"sync"
@@ -56,6 +57,8 @@ type client struct {
 	uri   string
 	token string
 }
+
+var errInvalidParameter = errors.New("invalid parameter")
 
 // New returns an instance of Protocol
 func New(s ...string) Protocol {
