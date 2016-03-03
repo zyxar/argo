@@ -393,11 +393,13 @@ func (id *client) GetServers(gid string) (infos []ServerInfo, err error) {
 // The response is an array of the same structs as returned by the aria2.tellStatus() method.
 // For the keys parameter, please refer to the aria2.tellStatus() method.
 func (id *client) TellActive(keys ...string) (infos []StatusInfo, err error) {
-	params := []interface{}{}
+	params := make([]interface{}, 0, 1)
+	if keys != nil {
+		params = append(params, keys)
+	}
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	// params = append(params, keys...)
 	id.lock()
 	err = Call(id.uri, aria2TellActive, params, &infos)
 	id.unlock()

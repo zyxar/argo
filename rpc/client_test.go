@@ -14,7 +14,7 @@ func init() {
 	if msg, err := rpc.LaunchAria2cDaemon(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("aria2c", msg["version"], "started!")
+		fmt.Println("aria2c", msg.Version, "started!")
 	}
 }
 
