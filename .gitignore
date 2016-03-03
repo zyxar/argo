@@ -21,3 +21,5 @@ _testmain.go
 
 *.exe
 argo
+*_ffjson*.go
+ffjson*/

@@ -1,3 +1,5 @@
+//go:generate ffjson resp.go
+
 package rpc
 
 // StatusInfo represents response of aria2.tellStatus
