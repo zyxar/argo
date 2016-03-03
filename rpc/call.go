@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/rpc/v2/json2"
 )
 
+var errInvalidParameter = errors.New("invalid parameter")
+
 // Call sends a request of rpc to aria2 daemon
 func Call(address, method string, params, reply interface{}) error {
 	pay, err := json2.EncodeClientRequest(method, params)
