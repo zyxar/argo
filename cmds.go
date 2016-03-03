@@ -354,8 +354,24 @@ var (
 			b = []byte(msg)
 			return
 		},
+		"savesession": func(s ...string) (b []byte, err error) {
+			msg, err := rpcc.SaveSession()
+			if err != nil {
+				return
+			}
+			b = []byte(msg)
+			return
+		},
 		"multicall": func(s ...string) (b []byte, err error) {
 			err = errNotSupportedCmd
+			return
+		},
+		"listmethods": func(s ...string) (b []byte, err error) {
+			msg, err := rpcc.ListMethods()
+			if err != nil {
+				return
+			}
+			b, err = json.MarshalIndent(msg, "", "  ")
 			return
 		},
 	}

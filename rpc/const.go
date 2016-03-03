@@ -33,5 +33,7 @@ const (
 	aria2GetSessionInfo       = "aria2.getSessionInfo"
 	aria2Shutdown             = "aria2.shutdown"
 	aria2ForceShutdown        = "aria2.forceShutdown"
+	aria2SaveSession          = "aria2.saveSession"
 	aria2Multicall            = "system.multicall"
+	aria2ListMethods          = "system.listMethods"
 )

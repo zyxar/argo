@@ -46,7 +46,9 @@ type Protocol interface {
 	GetSessionInfo() (m Option, err error)
 	Shutdown() (g string, err error)
 	ForceShutdown() (g string, err error)
+	SaveSession() (ok string, err error)
 	Multicall(methods []Option) (r []interface{}, err error)
+	ListMethods() (methods []string, err error)
 }
 
 type client struct {
@@ -699,6 +701,20 @@ func (id *client) ForceShutdown() (g string, err error) {
 	return
 }
 
+// `aria2.saveSession([secret])`
+// This method saves the current session to a file specified by the --save-session option.
+// This method returns OK if it succeeds.
+func (id *client) SaveSession() (ok string, err error) {
+	params := []interface{}{}
+	if id.token != "" {
+		params = append(params, "token:"+id.token)
+	}
+	id.lock()
+	err = Call(id.uri, aria2SaveSession, params, &ok)
+	id.unlock()
+	return
+}
+
 // `system.multicall(methods)`
 // This method encapsulates multiple method calls in a single request.
 // `methods` is of type array and its element is struct.
@@ -713,6 +729,17 @@ func (id *client) Multicall(methods []Option) (r []interface{}, err error) {
 	}
 	id.lock()
 	err = Call(id.uri, aria2Multicall, methods, &r)
+	id.unlock()
+	return
+}
+
+// `system.listMethods()`
+// This method returns the all available RPC methods in an array of string.
+// Unlike other methods, this method does not require secret token.
+// This is safe because this method jsut returns the available method names.
+func (id *client) ListMethods() (methods []string, err error) {
+	id.lock()
+	err = Call(id.uri, aria2ListMethods, []interface{}{}, &methods)
 	id.unlock()
 	return
 }
