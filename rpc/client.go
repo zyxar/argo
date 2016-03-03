@@ -53,8 +53,16 @@ func (id *client) LaunchAria2cDaemon() (info VersionInfo, err error) {
 		return
 	}
 	cmd.Process.Release()
-	time.Sleep(1 * time.Second)
-	info, err = id.GetVersion()
+	timeout := false
+	timer := time.AfterFunc(time.Second, func() {
+		timeout = true
+	})
+	for !timeout {
+		if info, err = id.GetVersion(); err == nil {
+			break
+		}
+	}
+	timer.Stop()
 	return
 }
 
