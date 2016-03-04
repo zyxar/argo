@@ -32,16 +32,13 @@ func main() {
 		os.Exit(1)
 	}
 	args := flag.Args()
-	var b []byte
 	var err error
 	if cmd, ok := cmds[args[0]]; ok {
-		b, err = cmd(args[1:]...)
+		err = cmd(args[1:]...)
 	} else {
 		err = errInvalidCmd
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		return
 	}
-	fmt.Printf("%s\n", b)
 }
