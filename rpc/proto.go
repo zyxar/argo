@@ -2,6 +2,7 @@ package rpc
 
 // Protocol is a set of rpc methods that aria2 daemon supports
 type Protocol interface {
+	SetNotifier(n Notifier) (err error)
 	LaunchAria2cDaemon() (info VersionInfo, err error)
 	AddURI(uri string, options ...interface{}) (gid string, err error)
 	AddTorrent(filename string, options ...interface{}) (gid string, err error)

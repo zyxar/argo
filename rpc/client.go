@@ -4,9 +4,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os/exec"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 // Option is a container for specifying Call parameters and returning results
@@ -14,6 +17,7 @@ type Option map[string]interface{}
 
 type client struct {
 	caller
+	url   *url.URL
 	token string
 }
 
@@ -49,13 +53,58 @@ func New(s ...string) (proto Protocol, err error) {
 		err = errInvalidParameter
 		return
 	}
-	proto = &client{caller: caller, token: token}
+	proto = &client{caller: caller, url: u, token: token}
 	return
 }
 
 // Call sends a request of rpc to aria2 daemon
 func (id *client) Call(method string, params, reply interface{}) (err error) {
 	err = id.call(method, params, reply)
+	return
+}
+
+func (id *client) SetNotifier(n Notifier) (err error) {
+	uri := *id.url
+	uri.Scheme = "ws"
+	ws, _, err := websocket.DefaultDialer.Dial(uri.String(), nil)
+	if err != nil {
+		return
+	}
+	go func() {
+		defer ws.Close()
+		var request struct {
+			Version string  `json:"jsonrpc"`
+			Method  string  `json:"method"`
+			Params  []Event `json:"params"`
+		}
+		var err error
+		for {
+			if err = ws.ReadJSON(&request); err != nil {
+				log.Println("reading ws:", err)
+				continue
+			}
+			switch request.Method {
+			case "aria2.onDownloadStart":
+				n.OnStart(request.Params)
+			case "aria2.onDownloadPause":
+				n.OnPause(request.Params)
+			case "aria2.onDownloadStop":
+				n.OnStop(request.Params)
+			case "aria2.onDownloadComplete":
+				n.OnComplete(request.Params)
+			case "aria2.onDownloadError":
+				n.OnError(request.Params)
+			case "aria2.onBtDownloadComplete":
+				n.OnBtComplete(request.Params)
+			default:
+				log.Printf("unexpected notification: %s\n", request.Method)
+			}
+		}
+		err = ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		if err != nil {
+			log.Println("closing ws:", err)
+		}
+	}()
 	return
 }
 

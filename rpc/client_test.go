@@ -21,6 +21,7 @@ func init() {
 	} else {
 		fmt.Println("aria2c", msg.Version, "started!")
 	}
+	rpc.SetNotifier(&DummyNotifier{})
 }
 
 func TestAll(t *testing.T) {
