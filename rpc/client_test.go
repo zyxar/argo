@@ -10,8 +10,13 @@ const targetURL = "https://nodejs.org/dist/index.json"
 var rpc Protocol
 
 func init() {
-	rpc = New("http://localhost:6800/jsonrpc")
-	if msg, err := rpc.LaunchAria2cDaemon(); err != nil {
+	var err error
+	rpc, err = New("http://localhost:6800/jsonrpc")
+	if err != nil {
+		panic(err)
+	}
+	msg, err := rpc.LaunchAria2cDaemon()
+	if err != nil {
 		panic(err)
 	} else {
 		fmt.Println("aria2c", msg.Version, "started!")

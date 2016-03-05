@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"io/ioutil"
+	"net/url"
 	"os/exec"
-	"sync"
 	"time"
 )
 
@@ -13,30 +13,50 @@ import (
 type Option map[string]interface{}
 
 type client struct {
-	mutex sync.Mutex
-	uri   string
+	caller
 	token string
 }
 
-var errInvalidParameter = errors.New("invalid parameter")
+var (
+	errInvalidParameter = errors.New("invalid parameter")
+	errNotImplemented   = errors.New("not implemented")
+)
 
 // New returns an instance of Protocol
-func New(s ...string) Protocol {
+func New(s ...string) (proto Protocol, err error) {
+	var token string
 	switch len(s) {
 	case 0:
-		return nil
+		err = errInvalidParameter
+		return
 	case 1:
-		return &client{uri: s[0]}
+		//
+	default:
+		token = s[1]
 	}
-	return &client{uri: s[0], token: s[1]}
+	u, err := url.Parse(s[0])
+	if err != nil {
+		return
+	}
+	var caller caller
+	switch u.Scheme {
+	case "http":
+		caller = newHttpCaller(s[0])
+	case "https", "ws", "wss":
+		err = errNotImplemented
+		return
+	default:
+		err = errInvalidParameter
+		return
+	}
+	proto = &client{caller: caller, token: token}
+	return
 }
 
-func (id *client) lock() {
-	id.mutex.Lock()
-}
-
-func (id *client) unlock() {
-	id.mutex.Unlock()
+// Call sends a request of rpc to aria2 daemon
+func (id *client) Call(method string, params, reply interface{}) (err error) {
+	err = id.call(method, params, reply)
+	return
 }
 
 // LaunchAria2cDaemon launchs aria2 daemon to listen for RPC calls, locally.
@@ -84,9 +104,7 @@ func (id *client) AddURI(uri string, options ...interface{}) (gid string, err er
 	if options != nil {
 		params = append(params, options...)
 	}
-	id.lock()
-	err = Call(id.uri, aria2AddURI, params, &gid)
-	id.unlock()
+	err = id.Call(aria2AddURI, params, &gid)
 	return
 }
 
@@ -119,9 +137,7 @@ func (id *client) AddTorrent(filename string, options ...interface{}) (gid strin
 	if options != nil {
 		params = append(params, options...)
 	}
-	id.lock()
-	err = Call(id.uri, aria2AddTorrent, params, &gid)
-	id.unlock()
+	err = id.Call(aria2AddTorrent, params, &gid)
 	return
 }
 
@@ -146,9 +162,7 @@ func (id *client) AddMetalink(uri string, options ...interface{}) (gid string, e
 	if options != nil {
 		params = append(params, options...)
 	}
-	id.lock()
-	err = Call(id.uri, aria2AddMetalink, params, &gid)
-	id.unlock()
+	err = id.Call(aria2AddMetalink, params, &gid)
 	return
 }
 
@@ -163,9 +177,7 @@ func (id *client) Remove(gid string) (g string, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2Remove, params, &g)
-	id.unlock()
+	err = id.Call(aria2Remove, params, &g)
 	return
 }
 
@@ -178,9 +190,7 @@ func (id *client) ForceRemove(gid string) (g string, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2ForceRemove, params, &g)
-	id.unlock()
+	err = id.Call(aria2ForceRemove, params, &g)
 	return
 }
 
@@ -197,9 +207,7 @@ func (id *client) Pause(gid string) (g string, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2Pause, params, &g)
-	id.unlock()
+	err = id.Call(aria2Pause, params, &g)
 	return
 }
 
@@ -211,9 +219,7 @@ func (id *client) PauseAll() (ok string, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2PauseAll, params, &ok)
-	id.unlock()
+	err = id.Call(aria2PauseAll, params, &ok)
 	return
 }
 
@@ -226,9 +232,7 @@ func (id *client) ForcePause(gid string) (g string, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2ForcePause, params, &g)
-	id.unlock()
+	err = id.Call(aria2ForcePause, params, &g)
 	return
 }
 
@@ -240,9 +244,7 @@ func (id *client) ForcePauseAll() (ok string, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2ForcePauseAll, params, &ok)
-	id.unlock()
+	err = id.Call(aria2ForcePauseAll, params, &ok)
 	return
 }
 
@@ -255,9 +257,7 @@ func (id *client) Unpause(gid string) (g string, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2Unpause, params, &g)
-	id.unlock()
+	err = id.Call(aria2Unpause, params, &g)
 	return
 }
 
@@ -269,9 +269,7 @@ func (id *client) UnpauseAll() (ok string, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2UnpauseAll, params, &ok)
-	id.unlock()
+	err = id.Call(aria2UnpauseAll, params, &ok)
 	return
 }
 
@@ -293,9 +291,7 @@ func (id *client) TellStatus(gid string, keys ...string) (info StatusInfo, err e
 	if keys != nil {
 		params = append(params, keys)
 	}
-	id.lock()
-	err = Call(id.uri, aria2TellStatus, params, &info)
-	id.unlock()
+	err = id.Call(aria2TellStatus, params, &info)
 	return
 }
 
@@ -310,9 +306,7 @@ func (id *client) GetURIs(gid string) (infos []URIInfo, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2GetURIs, params, &infos)
-	id.unlock()
+	err = id.Call(aria2GetURIs, params, &infos)
 	return
 }
 
@@ -326,9 +320,7 @@ func (id *client) GetFiles(gid string) (infos []FileInfo, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2GetFiles, params, &infos)
-	id.unlock()
+	err = id.Call(aria2GetFiles, params, &infos)
 	return
 }
 
@@ -343,9 +335,7 @@ func (id *client) GetPeers(gid string) (infos []PeerInfo, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2GetPeers, params, &infos)
-	id.unlock()
+	err = id.Call(aria2GetPeers, params, &infos)
 	return
 }
 
@@ -359,9 +349,7 @@ func (id *client) GetServers(gid string) (infos []ServerInfo, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2GetServers, params, &infos)
-	id.unlock()
+	err = id.Call(aria2GetServers, params, &infos)
 	return
 }
 
@@ -377,9 +365,7 @@ func (id *client) TellActive(keys ...string) (infos []StatusInfo, err error) {
 	if keys != nil {
 		params = append(params, keys)
 	}
-	id.lock()
-	err = Call(id.uri, aria2TellActive, params, &infos)
-	id.unlock()
+	err = id.Call(aria2TellActive, params, &infos)
 	return
 }
 
@@ -406,9 +392,7 @@ func (id *client) TellWaiting(offset, num int, keys ...string) (infos []StatusIn
 	if keys != nil {
 		params = append(params, keys)
 	}
-	id.lock()
-	err = Call(id.uri, aria2TellWaiting, params, &infos)
-	id.unlock()
+	err = id.Call(aria2TellWaiting, params, &infos)
 	return
 }
 
@@ -429,9 +413,7 @@ func (id *client) TellStopped(offset, num int, keys ...string) (infos []StatusIn
 	if keys != nil {
 		params = append(params, keys)
 	}
-	id.lock()
-	err = Call(id.uri, aria2TellStopped, params, &infos)
-	id.unlock()
+	err = id.Call(aria2TellStopped, params, &infos)
 	return
 }
 
@@ -452,9 +434,7 @@ func (id *client) ChangePosition(gid string, pos int, how string) (p int, err er
 	params = append(params, gid)
 	params = append(params, pos)
 	params = append(params, how)
-	id.lock()
-	err = Call(id.uri, aria2ChangePosition, params, &p)
-	id.unlock()
+	err = id.Call(aria2ChangePosition, params, &p)
 	return
 }
 
@@ -484,9 +464,7 @@ func (id *client) ChangeURI(gid string, fileindex int, delUris []string, addUris
 	if position != nil {
 		params = append(params, position[0])
 	}
-	id.lock()
-	err = Call(id.uri, aria2ChangeURI, params, &p)
-	id.unlock()
+	err = id.Call(aria2ChangeURI, params, &p)
 	return
 }
 
@@ -501,9 +479,7 @@ func (id *client) GetOption(gid string) (m Option, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2GetOption, params, &m)
-	id.unlock()
+	err = id.Call(aria2GetOption, params, &m)
 	return
 }
 
@@ -527,9 +503,7 @@ func (id *client) ChangeOption(gid string, option Option) (ok string, err error)
 	if option != nil {
 		params = append(params, option)
 	}
-	id.lock()
-	err = Call(id.uri, aria2ChangeOption, params, &ok)
-	id.unlock()
+	err = id.Call(aria2ChangeOption, params, &ok)
 	return
 }
 
@@ -544,9 +518,7 @@ func (id *client) GetGlobalOption() (m Option, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2GetGlobalOption, params, &m)
-	id.unlock()
+	err = id.Call(aria2GetGlobalOption, params, &m)
 	return
 }
 
@@ -576,9 +548,7 @@ func (id *client) ChangeGlobalOption(options Option) (ok string, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, options)
-	id.lock()
-	err = Call(id.uri, aria2ChangeGlobalOption, params, &ok)
-	id.unlock()
+	err = id.Call(aria2ChangeGlobalOption, params, &ok)
 	return
 }
 
@@ -597,9 +567,7 @@ func (id *client) GetGlobalStat() (info GlobalStatInfo, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2GetGlobalStat, params, &info)
-	id.unlock()
+	err = id.Call(aria2GetGlobalStat, params, &info)
 	return
 }
 
@@ -611,9 +579,7 @@ func (id *client) PurgeDownloadResult() (ok string, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2PurgeDownloadResult, params, &ok)
-	id.unlock()
+	err = id.Call(aria2PurgeDownloadResult, params, &ok)
 	return
 }
 
@@ -626,9 +592,7 @@ func (id *client) RemoveDownloadResult(gid string) (ok string, err error) {
 		params = append(params, "token:"+id.token)
 	}
 	params = append(params, gid)
-	id.lock()
-	err = Call(id.uri, aria2RemoveDownloadResult, params, &ok)
-	id.unlock()
+	err = id.Call(aria2RemoveDownloadResult, params, &ok)
 	return
 }
 
@@ -642,9 +606,7 @@ func (id *client) GetVersion() (info VersionInfo, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2GetVersion, params, &info)
-	id.unlock()
+	err = id.Call(aria2GetVersion, params, &info)
 	return
 }
 
@@ -657,9 +619,7 @@ func (id *client) GetSessionInfo() (info SessionInfo, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2GetSessionInfo, params, &info)
-	id.unlock()
+	err = id.Call(aria2GetSessionInfo, params, &info)
 	return
 }
 
@@ -671,9 +631,7 @@ func (id *client) Shutdown() (ok string, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2Shutdown, params, &ok)
-	id.unlock()
+	err = id.Call(aria2Shutdown, params, &ok)
 	return
 }
 
@@ -686,9 +644,7 @@ func (id *client) ForceShutdown() (ok string, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2ForceShutdown, params, &ok)
-	id.unlock()
+	err = id.Call(aria2ForceShutdown, params, &ok)
 	return
 }
 
@@ -700,9 +656,7 @@ func (id *client) SaveSession() (ok string, err error) {
 	if id.token != "" {
 		params = append(params, "token:"+id.token)
 	}
-	id.lock()
-	err = Call(id.uri, aria2SaveSession, params, &ok)
-	id.unlock()
+	err = id.Call(aria2SaveSession, params, &ok)
 	return
 }
 
@@ -718,9 +672,7 @@ func (id *client) Multicall(methods []Method) (r []interface{}, err error) {
 		err = errInvalidParameter
 		return
 	}
-	id.lock()
-	err = Call(id.uri, aria2Multicall, methods, &r)
-	id.unlock()
+	err = id.Call(aria2Multicall, methods, &r)
 	return
 }
 
@@ -729,8 +681,6 @@ func (id *client) Multicall(methods []Method) (r []interface{}, err error) {
 // Unlike other methods, this method does not require secret token.
 // This is safe because this method jsut returns the available method names.
 func (id *client) ListMethods() (methods []string, err error) {
-	id.lock()
-	err = Call(id.uri, aria2ListMethods, []string{}, &methods)
-	id.unlock()
+	err = id.Call(aria2ListMethods, []string{}, &methods)
 	return
 }
