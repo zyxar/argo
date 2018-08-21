@@ -15,7 +15,7 @@ type caller interface {
 
 type httpCaller string
 
-func newHttpCaller(uri string) caller {
+func newHTTPCaller(uri string) caller {
 	return httpCaller(uri)
 }
 

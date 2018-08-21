@@ -23,3 +23,6 @@ _testmain.go
 argo
 *_ffjson*.go
 ffjson*/
+*.mach
+*.elf
+argo.*
