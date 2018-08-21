@@ -9,6 +9,8 @@ install: true
 before_script:
 - sudo apt-get -qq update
 - sudo apt-get install -y aria2
+- go get -v -u github.com/gorilla/websocket
+- go get -v -u github.com/gorilla/rpc/...
 - go get -v -u github.com/mailru/easyjson/...
 
 script:
