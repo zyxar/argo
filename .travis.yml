@@ -1,15 +1,22 @@
+sudo: false
 language: go
 go:
-- 1.6
-- tip
-before_install:
+- "1.10.x"
+- master
+
+install: true
+
+before_script:
 - sudo apt-get -qq update
 - sudo apt-get install -y aria2
-- go get -v github.com/pquerna/ffjson
+- go get -v -u github.com/mailru/easyjson/...
+
 script:
 - go test -v ./rpc
 - go generate -v ./rpc
 - go test -v ./rpc
+
 notifications:
   slack:
     secure: gz1d/jtCR5RZEAJR8Exb1q3i8AQfdwgZXNNf1V8VMiXQAK6Od8kE9Vw2ixoeR9QlzznNaJbcVNJyu9xVkxOIWlTAEuJ0aAVt3a5zjsfv2ZzU361KLKNphVpT/Xfb22iKwP+y31ZR4EeFsObyebZfruqBVibifs7tF0aWw4H0lgc=
+  email: false

@@ -1,4 +1,4 @@
-//go:generate ffjson resp.go
+//go:generate easyjson -all
 
 package rpc
 
