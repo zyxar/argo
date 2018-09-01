@@ -4,6 +4,7 @@ argo/rpc
 [![Go Report Card](https://goreportcard.com/badge/github.com/zyxar/argo)](https://goreportcard.com/report/github.com/zyxar/argo)
 [![GoDoc](https://godoc.org/github.com/zyxar/argo/rpc?status.svg)](https://godoc.org/github.com/zyxar/argo/rpc)
 [![Build Status](https://travis-ci.org/zyxar/argo.svg?branch=master)](https://travis-ci.org/zyxar/argo)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fzyxar%2Fargo.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fzyxar%2Fargo?ref=badge_shield)
 
 aria2 RPC in #Go
 
@@ -50,3 +51,7 @@ aria2 RPC in #Go
   ForceShutdown() (msg string, err error)
   Multicall(methods []Option) (r []interface{}, err error)
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fzyxar%2Fargo.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fzyxar%2Fargo?ref=badge_large)
