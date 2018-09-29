@@ -8,17 +8,22 @@ GOARCH     := amd64
 
 all: $(shell $(GO) env GOOS)
 
-build-%:
-	$(eval $@_OS := $*)
-	env GOOS=$($@_OS) GOARCH=$(GOARCH) $(GO) build ${LDFLAGS} -v -o $(PRODUCT)$(EXT) .
+build:
+	env GO111MODULE=$(GO111MODULE) GOOS=$(GOOS) GOARCH=$(GOARCH) GOFLAGS=$(GOFLAGS) $(GO) build $(GCFLAGS) -v -o $(PRODUCT)$(EXT) .
 
-
+linux: export GOOS=linux
 linux: EXT=.elf
-linux: build-linux
+linux: build
 
+darwin: export GOOS=darwin
 darwin: EXT=.mach
-darwin: build-darwin
+darwin: build
+
+js: export GOOS=js
+js: export GOARCH=wasm
+js: EXT=.wasm
+js: build
 
 .PHONY: clean
 clean:
-	@rm -f $(PRODUCT) $(PRODUCT).elf $(PRODUCT).mach
+	@rm -f $(PRODUCT) $(PRODUCT).*
