@@ -1,16 +1,16 @@
 argo/rpc
 ====
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/zyxar/argo)](https://goreportcard.com/report/github.com/zyxar/argo)
-[![GoDoc](https://godoc.org/github.com/zyxar/argo/rpc?status.svg)](https://godoc.org/github.com/zyxar/argo/rpc)
-[![Build Status](https://travis-ci.org/zyxar/argo.svg?branch=master)](https://travis-ci.org/zyxar/argo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/KerwinKoo/argo)](https://goreportcard.com/report/github.com/KerwinKoo/argo)
+[![GoDoc](https://godoc.org/github.com/KerwinKoo/argo/rpc?status.svg)](https://godoc.org/github.com/KerwinKoo/argo/rpc)
+[![Build Status](https://travis-ci.org/KerwinKoo/argo.svg?branch=master)](https://travis-ci.org/KerwinKoo/argo)
 
 aria2 RPC in #Go
 
 
 ## Install
 
-`go get github.com/zyxar/argo/rpc`
+`go get github.com/KerwinKoo/argo/rpc`
 
 
 ## Interface
