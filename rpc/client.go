@@ -44,9 +44,9 @@ func New(s ...string) (proto Protocol, err error) {
 	}
 	var caller caller
 	switch u.Scheme {
-	case "http":
+	case "http", "https":
 		caller = newHTTPCaller(s[0])
-	case "https", "ws", "wss":
+	case "ws", "wss":
 		err = errNotImplemented
 		return
 	default:
