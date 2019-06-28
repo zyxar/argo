@@ -25,10 +25,10 @@ type StatusInfo struct {
 	Dir             string     `json:"dir"`             // Directory to save files.
 	Files           []FileInfo `json:"files"`           // Returns the list of files. The elements of this list are the same structs used in aria2.getFiles() method.
 	BitTorrent      struct {
-		AnnounceList string `json:"announceList"` // List of lists of announce URIs. If the torrent contains announce and no announce-list, announce is converted to the announce-list format.
-		Comment      string `json:"comment"`      // The comment of the torrent. comment.utf-8 is used if available.
-		CreationDate string `json:"creationDate"` // The creation time of the torrent. The value is an integer since the epoch, measured in seconds.
-		Mode         string `json:"mode"`         // File mode of the torrent. The value is either single or multi.
+		AnnounceList [][]string `json:"announceList"` // List of lists of announce URIs. If the torrent contains announce and no announce-list, announce is converted to the announce-list format.
+		Comment      string     `json:"comment"`      // The comment of the torrent. comment.utf-8 is used if available.
+		CreationDate string     `json:"creationDate"` // The creation time of the torrent. The value is an integer since the epoch, measured in seconds.
+		Mode         string     `json:"mode"`         // File mode of the torrent. The value is either single or multi.
 		Info         struct {
 			Name string `json:"name"` // name in info dictionary. name.utf-8 is used if available.
 		} `json:"info"` // Struct which contains data from Info dictionary. It contains following keys.
