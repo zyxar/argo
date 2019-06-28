@@ -1,29 +1,37 @@
 GO          = go
+GOARCH      = amd64
+GO111MODULE = on
+GOFLAGS     =
+SRC         =
 PRODUCT     = argo
-GOARCH     := amd64
-# VERSION    := $(shell git describe --all --always --dirty --long)
-# BUILD_TIME := $(shell date +%FT%T%z)
-# GOVERSION  := $(shell go version | cut -d ' ' -f 3)
-# LDFLAGS     = -ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GoVersion=${GOVERSION}"
 
 all: $(shell $(GO) env GOOS)
 
 build:
-	env GO111MODULE=$(GO111MODULE) GOOS=$(GOOS) GOARCH=$(GOARCH) GOFLAGS=$(GOFLAGS) $(GO) build $(GCFLAGS) -v -o $(PRODUCT)$(EXT) .
+	env GO111MODULE=$(GO111MODULE) GOOS=$(GOOS) GOARCH=$(GOARCH) GOFLAGS=$(GOFLAGS) $(GO) build ${LDFLAGS} $(GCFLAGS) -v -o bin/$(GOOS)_$(GOARCH)/$(PRODUCT) ./$(SRC)
+
+install:
+	env GO111MODULE=$(GO111MODULE) GOOS=$(GOOS) GOARCH=$(GOARCH) GOFLAGS=$(GOFLAGS) $(GO) install ./$(SRC)
+
 
 linux: export GOOS=linux
-linux: EXT=.elf
 linux: build
 
 darwin: export GOOS=darwin
-darwin: EXT=.mach
 darwin: build
+
+#build-ldflags: revision=$(shell git describe --all --always --dirty --long)
+#build-ldflags: timestamp=$(shell date +%FT%T%z)
+#build-ldflags: LDFLAGS=-ldflags "-X main.Revision=${revision} -X main.BuildTime=${timestamp}"
 
 js: export GOOS=js
 js: export GOARCH=wasm
-js: EXT=.wasm
 js: build
 
-.PHONY: clean
+.PHONY: clean gomod
 clean:
-	@rm -f $(PRODUCT) $(PRODUCT).*
+	@rm -fr bin/*
+
+gomod:
+	env GO111MODULE=on $(GO) mod tidy
+#	env GO111MODULE=on $(GO) mod vendor

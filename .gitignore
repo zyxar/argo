@@ -27,3 +27,4 @@ ffjson*/
 *.elf
 argo.*
 *_easyjson.go
+bin/
