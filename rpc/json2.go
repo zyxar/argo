@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"math/rand"
 )
 
 // ----------------------------------------------------------------------------
@@ -40,6 +39,7 @@ type clientResponse struct {
 	Version string           `json:"jsonrpc"`
 	Result  *json.RawMessage `json:"result"`
 	Error   *json.RawMessage `json:"error"`
+	Id      uint64           `json:"id"`
 }
 
 // EncodeClientRequest encodes parameters for a JSON-RPC client request.
@@ -49,7 +49,7 @@ func EncodeClientRequest(method string, args interface{}) (*bytes.Buffer, error)
 		Version: "2.0",
 		Method:  method,
 		Params:  args,
-		Id:      uint64(rand.Int63()),
+		Id:      reqid(),
 	}
 	if err := json.NewEncoder(&buf).Encode(c); err != nil {
 		return nil, err
@@ -57,13 +57,7 @@ func EncodeClientRequest(method string, args interface{}) (*bytes.Buffer, error)
 	return &buf, nil
 }
 
-// DecodeClientResponse decodes the response body of a client request into
-// the interface reply.
-func DecodeClientResponse(r io.Reader, reply interface{}) error {
-	var c clientResponse
-	if err := json.NewDecoder(r).Decode(&c); err != nil {
-		return err
-	}
+func (c clientResponse) decode(reply interface{}) error {
 	if c.Error != nil {
 		jsonErr := &Error{}
 		if err := json.Unmarshal(*c.Error, jsonErr); err != nil {
@@ -80,6 +74,16 @@ func DecodeClientResponse(r io.Reader, reply interface{}) error {
 	}
 
 	return json.Unmarshal(*c.Result, reply)
+}
+
+// DecodeClientResponse decodes the response body of a client request into
+// the interface reply.
+func DecodeClientResponse(r io.Reader, reply interface{}) error {
+	var c clientResponse
+	if err := json.NewDecoder(r).Decode(&c); err != nil {
+		return err
+	}
+	return c.decode(reply)
 }
 
 type ErrorCode int

@@ -5,13 +5,9 @@ import (
 	"testing"
 )
 
-const targetURL = "https://nodejs.org/dist/index.json"
-
-var rpc Protocol
-
-func init() {
-	var err error
-	rpc, err = New("http://localhost:6800/jsonrpc")
+func TestAll(t *testing.T) {
+	const targetURL = "https://nodejs.org/dist/index.json"
+	rpc, err := New("http://localhost:6800/jsonrpc")
 	if err != nil {
 		panic(err)
 	}
@@ -22,9 +18,7 @@ func init() {
 		fmt.Println("aria2c", msg.Version, "started!")
 	}
 	rpc.SetNotifier(&DummyNotifier{})
-}
 
-func TestAll(t *testing.T) {
 	g, err := rpc.AddURI(targetURL)
 	if err != nil {
 		t.Error(err)
