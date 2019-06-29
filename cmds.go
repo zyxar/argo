@@ -196,10 +196,6 @@ var (
 			return
 		},
 		"tellactive": func(s ...string) (err error) {
-			if len(s) == 0 {
-				err = errParameter
-				return
-			}
 			msg, err := rpcc.TellActive(s...)
 			if err != nil {
 				return
@@ -208,18 +204,17 @@ var (
 			return
 		},
 		"tellwaiting": func(s ...string) (err error) {
-			if len(s) < 2 {
-				err = errParameter
-				return
+			var offset, num int = 0, 10
+			if len(s) >= 2 {
+				if offset, err = strconv.Atoi(s[0]); err != nil {
+					return
+				}
+				if num, err = strconv.Atoi(s[1]); err != nil {
+					return
+				}
+				s = s[2:]
 			}
-			var offset, num int
-			if offset, err = strconv.Atoi(s[0]); err != nil {
-				return
-			}
-			if num, err = strconv.Atoi(s[1]); err != nil {
-				return
-			}
-			msg, err := rpcc.TellWaiting(offset, num, s[2:]...)
+			msg, err := rpcc.TellWaiting(offset, num, s...)
 			if err != nil {
 				return
 			}
@@ -227,18 +222,17 @@ var (
 			return
 		},
 		"tellstopped": func(s ...string) (err error) {
-			if len(s) < 2 {
-				err = errParameter
-				return
+			var offset, num int = 0, 10
+			if len(s) >= 2 {
+				if offset, err = strconv.Atoi(s[0]); err != nil {
+					return
+				}
+				if num, err = strconv.Atoi(s[1]); err != nil {
+					return
+				}
+				s = s[2:]
 			}
-			var offset, num int
-			if offset, err = strconv.Atoi(s[0]); err != nil {
-				return
-			}
-			if num, err = strconv.Atoi(s[1]); err != nil {
-				return
-			}
-			msg, err := rpcc.TellStopped(offset, num, s[2:]...)
+			msg, err := rpcc.TellStopped(offset, num, s...)
 			if err != nil {
 				return
 			}

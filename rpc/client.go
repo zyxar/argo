@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"io/ioutil"
@@ -24,6 +25,7 @@ type client struct {
 var (
 	errInvalidParameter = errors.New("invalid parameter")
 	errNotImplemented   = errors.New("not implemented")
+	errConnTimeout      = errors.New("connect to aria2 daemon timeout")
 )
 
 // New returns an instance of Protocol
@@ -116,16 +118,28 @@ func (c *client) LaunchAria2cDaemon() (info VersionInfo, err error) {
 		return
 	}
 	cmd.Process.Release()
-	timeout := false
-	timer := time.AfterFunc(time.Second, func() {
-		timeout = true
-	})
-	for !timeout {
-		if info, err = c.GetVersion(); err == nil {
-			break
+	ctx, cancel := context.WithCancel(context.TODO())
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Millisecond):
+			}
+			if info, err = c.GetVersion(); err == nil {
+				cancel()
+				return
+			}
 		}
+	}()
+
+	select {
+	case <-time.After(time.Second):
+		cancel()
+		return info, errConnTimeout
+	case <-ctx.Done():
 	}
-	timer.Stop()
+
 	return
 }
 
