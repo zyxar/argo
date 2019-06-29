@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/zyxar/argo/rpc"
 )
@@ -44,7 +45,7 @@ func main() {
 		os.Exit(1)
 	}
 	var err error
-	rpcc, err = rpc.New(rpcURI, rpcSecret)
+	rpcc, err = rpc.New(rpcURI, time.Second, rpcSecret)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)

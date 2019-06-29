@@ -29,7 +29,7 @@ var (
 )
 
 // New returns an instance of Protocol
-func New(uri string, token ...string) (proto Protocol, err error) {
+func New(uri string, timeout time.Duration, token ...string) (proto Protocol, err error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return
@@ -37,9 +37,9 @@ func New(uri string, token ...string) (proto Protocol, err error) {
 	var caller caller
 	switch u.Scheme {
 	case "http", "https":
-		caller = newHTTPCaller(uri)
+		caller = newHTTPCaller(uri, timeout)
 	case "ws", "wss":
-		caller, err = newWebsocketCaller(context.Background(), uri)
+		caller, err = newWebsocketCaller(context.Background(), uri, timeout)
 		if err != nil {
 			return
 		}

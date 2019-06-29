@@ -18,10 +18,26 @@ type caller interface {
 	Call(method string, params, reply interface{}) (err error)
 }
 
-type httpCaller string
+type httpCaller struct {
+	uri string
+	c   *http.Client
+}
 
-func newHTTPCaller(uri string) caller {
-	return httpCaller(uri)
+func newHTTPCaller(uri string, timeout time.Duration) *httpCaller {
+	c := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 1,
+			MaxConnsPerHost:     1,
+			// TLSClientConfig:     tlsConfig,
+			Dial: (&net.Dialer{
+				Timeout:   timeout,
+				KeepAlive: 60 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout:   3 * time.Second,
+			ResponseHeaderTimeout: timeout,
+		},
+	}
+	return &httpCaller{uri: uri, c: c}
 }
 
 func (h httpCaller) Call(method string, params, reply interface{}) (err error) {
@@ -29,7 +45,7 @@ func (h httpCaller) Call(method string, params, reply interface{}) (err error) {
 	if err != nil {
 		return
 	}
-	r, err := http.Post(string(h), "application/json", payload)
+	r, err := h.c.Post(h.uri, "application/json", payload)
 	if err != nil {
 		return
 	}
@@ -45,9 +61,10 @@ type websocketCaller struct {
 	cancel   context.CancelFunc
 	wg       *sync.WaitGroup
 	once     sync.Once
+	timeout  time.Duration
 }
 
-func newWebsocketCaller(ctx context.Context, uri string) (*websocketCaller, error) {
+func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration) (*websocketCaller, error) {
 	var header = http.Header{}
 	conn, _, err := websocket.DefaultDialer.Dial(uri, header)
 	if err != nil {
@@ -57,7 +74,7 @@ func newWebsocketCaller(ctx context.Context, uri string) (*websocketCaller, erro
 	sendChan := make(chan *sendRequest, 16)
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(ctx)
-	w := &websocketCaller{ctx: ctx, conn: conn, wg: &wg, cancel: cancel, sendChan: sendChan}
+	w := &websocketCaller{ctx: ctx, conn: conn, wg: &wg, cancel: cancel, sendChan: sendChan, timeout: timeout}
 	processor := NewResponseProcessor()
 	wg.Add(1)
 	go func() { // routine:recv
@@ -116,7 +133,7 @@ func (w *websocketCaller) Close() (err error) {
 }
 
 func (w websocketCaller) Call(method string, params, reply interface{}) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), w.timeout)
 	defer cancel()
 	select {
 	case w.sendChan <- &sendRequest{cancel: cancel, request: &clientRequest{
