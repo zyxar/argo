@@ -29,34 +29,29 @@ var (
 )
 
 // New returns an instance of Protocol
-func New(s ...string) (proto Protocol, err error) {
-	var token string
-	switch len(s) {
-	case 0:
-		err = errInvalidParameter
-		return
-	case 1:
-		//
-	default:
-		token = s[1]
-	}
-	u, err := url.Parse(s[0])
+func New(uri string, token ...string) (proto Protocol, err error) {
+	u, err := url.Parse(uri)
 	if err != nil {
 		return
 	}
 	var caller caller
 	switch u.Scheme {
 	case "http", "https":
-		caller = newHTTPCaller(s[0])
+		caller = newHTTPCaller(uri)
 	case "ws", "wss":
-		err = errNotImplemented
-		return
+		caller, err = newWebsocketCaller(context.Background(), uri)
+		if err != nil {
+			return
+		}
 	default:
 		err = errInvalidParameter
 		return
 	}
-	proto = &client{caller: caller, url: u, token: token}
-	return
+	c := &client{caller: caller, url: u}
+	if len(token) > 0 {
+		c.token = token[0]
+	}
+	return c, nil
 }
 
 func (c *client) SetNotifier(n Notifier) (err error) {
