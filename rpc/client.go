@@ -13,6 +13,12 @@ import (
 // Option is a container for specifying Call parameters and returning results
 type Option map[string]interface{}
 
+type Client interface {
+	Protocol
+	LaunchAria2cDaemon() (info VersionInfo, err error)
+	Close() error
+}
+
 type client struct {
 	caller
 	url   *url.URL
@@ -25,11 +31,11 @@ var (
 	errConnTimeout      = errors.New("connect to aria2 daemon timeout")
 )
 
-// New returns an instance of Protocol
-func New(ctx context.Context, uri string, token string, timeout time.Duration, notifier Notifier) (proto Protocol, err error) {
+// New returns an instance of Client
+func New(ctx context.Context, uri string, token string, timeout time.Duration, notifier Notifier) (Client, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
-		return
+		return nil, err
 	}
 	var caller caller
 	switch u.Scheme {
@@ -38,11 +44,10 @@ func New(ctx context.Context, uri string, token string, timeout time.Duration, n
 	case "ws", "wss":
 		caller, err = newWebsocketCaller(ctx, u.String(), timeout, notifier)
 		if err != nil {
-			return
+			return nil, err
 		}
 	default:
-		err = errInvalidParameter
-		return
+		return nil, errInvalidParameter
 	}
 	c := &client{caller: caller, url: u, token: token}
 	return c, nil

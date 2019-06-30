@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	rpcc               rpc.Protocol
+	rpcc               rpc.Client
 	rpcSecret          string
 	rpcURI             string
 	errParameter       = errors.New("invalid parameter")
@@ -51,6 +51,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
+	defer rpcc.Close()
 	args := flag.Args()
 	if cmd, ok := cmds[args[0]]; ok {
 		err = cmd(args[1:]...)
