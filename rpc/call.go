@@ -46,7 +46,7 @@ func newHTTPCaller(ctx context.Context, u *url.URL, timeout time.Duration, notif
 	ctx, cancel := context.WithCancel(ctx)
 	h := &httpCaller{uri: u.String(), c: c, cancel: cancel, wg: &wg}
 	if notifer != nil {
-		h.setNotifier(ctx, *u, notifer)
+		h.setNotifier(ctx, *u, timeout, notifer)
 	}
 	return h
 }
@@ -59,7 +59,7 @@ func (h *httpCaller) Close() (err error) {
 	return
 }
 
-func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifer Notifier) (err error) {
+func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, timeout time.Duration, notifer Notifier) (err error) {
 	u.Scheme = "ws"
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -77,7 +77,7 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifer Notifie
 				return
 			default:
 			}
-
+			conn.SetReadDeadline(time.Now().Add(timeout))
 			if err = conn.ReadJSON(&request); err != nil {
 				select {
 				case <-ctx.Done():
@@ -104,6 +104,7 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifer Notifie
 				log.Printf("unexpected notification: %s", request.Method)
 			}
 		}
+		conn.SetWriteDeadline(time.Now().Add(timeout))
 		err = conn.WriteMessage(websocket.CloseMessage,
 			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 		if err != nil {
