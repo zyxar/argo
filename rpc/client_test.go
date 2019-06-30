@@ -1,13 +1,15 @@
 package rpc
 
 import (
+	"context"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestAll(t *testing.T) {
 	const targetURL = "https://nodejs.org/dist/index.json"
-	rpc, err := New("http://localhost:6800/jsonrpc")
+	rpc, err := New(context.Background(), "http://localhost:6800/jsonrpc", "", time.Second, &DummyNotifier{})
 	if err != nil {
 		panic(err)
 	}
@@ -17,7 +19,6 @@ func TestAll(t *testing.T) {
 	} else {
 		fmt.Println("aria2c", msg.Version, "started!")
 	}
-	rpc.SetNotifier(&DummyNotifier{})
 
 	g, err := rpc.AddURI(targetURL)
 	if err != nil {

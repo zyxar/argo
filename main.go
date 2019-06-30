@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -45,7 +46,7 @@ func main() {
 		os.Exit(1)
 	}
 	var err error
-	rpcc, err = rpc.New(rpcURI, time.Second, rpcSecret)
+	rpcc, err = rpc.New(context.Background(), rpcURI, rpcSecret, time.Second, nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)

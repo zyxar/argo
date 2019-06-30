@@ -30,7 +30,7 @@ func (r *ResponseProcessor) remove(id uint64) {
 
 // Process called by recv routine
 func (r *ResponseProcessor) Process(resp clientResponse) error {
-	id := resp.Id
+	id := *resp.Id
 	r.mu.RLock()
 	fn, ok := r.cbs[id]
 	r.mu.RUnlock()

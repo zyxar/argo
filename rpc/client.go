@@ -5,12 +5,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"os/exec"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 // Option is a container for specifying Call parameters and returning results
@@ -29,7 +26,7 @@ var (
 )
 
 // New returns an instance of Protocol
-func New(uri string, timeout time.Duration, token ...string) (proto Protocol, err error) {
+func New(ctx context.Context, uri string, token string, timeout time.Duration, notifier Notifier) (proto Protocol, err error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return
@@ -37,9 +34,9 @@ func New(uri string, timeout time.Duration, token ...string) (proto Protocol, er
 	var caller caller
 	switch u.Scheme {
 	case "http", "https":
-		caller = newHTTPCaller(uri, timeout)
+		caller = newHTTPCaller(ctx, u, timeout, notifier)
 	case "ws", "wss":
-		caller, err = newWebsocketCaller(context.Background(), uri, timeout)
+		caller, err = newWebsocketCaller(ctx, u.String(), timeout, notifier)
 		if err != nil {
 			return
 		}
@@ -47,56 +44,8 @@ func New(uri string, timeout time.Duration, token ...string) (proto Protocol, er
 		err = errInvalidParameter
 		return
 	}
-	c := &client{caller: caller, url: u}
-	if len(token) > 0 {
-		c.token = token[0]
-	}
+	c := &client{caller: caller, url: u, token: token}
 	return c, nil
-}
-
-func (c *client) SetNotifier(n Notifier) (err error) {
-	uri := *c.url
-	uri.Scheme = "ws"
-	ws, _, err := websocket.DefaultDialer.Dial(uri.String(), nil)
-	if err != nil {
-		return
-	}
-	go func() {
-		defer ws.Close()
-		var request struct {
-			Version string  `json:"jsonrpc"`
-			Method  string  `json:"method"`
-			Params  []Event `json:"params"`
-		}
-		var err error
-		for {
-			if err = ws.ReadJSON(&request); err != nil {
-				log.Println("reading ws:", err)
-				continue
-			}
-			switch request.Method {
-			case "aria2.onDownloadStart":
-				n.OnStart(request.Params)
-			case "aria2.onDownloadPause":
-				n.OnPause(request.Params)
-			case "aria2.onDownloadStop":
-				n.OnStop(request.Params)
-			case "aria2.onDownloadComplete":
-				n.OnComplete(request.Params)
-			case "aria2.onDownloadError":
-				n.OnError(request.Params)
-			case "aria2.onBtDownloadComplete":
-				n.OnBtComplete(request.Params)
-			default:
-				log.Printf("unexpected notification: %s\n", request.Method)
-			}
-		}
-		err = ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-		if err != nil {
-			log.Println("closing ws:", err)
-		}
-	}()
-	return
 }
 
 // LaunchAria2cDaemon launchs aria2 daemon to listen for RPC calls, locally.

@@ -39,7 +39,7 @@ type clientResponse struct {
 	Version string           `json:"jsonrpc"`
 	Result  *json.RawMessage `json:"result"`
 	Error   *json.RawMessage `json:"error"`
-	Id      uint64           `json:"id"`
+	Id      *uint64          `json:"id"`
 }
 
 // EncodeClientRequest encodes parameters for a JSON-RPC client request.
