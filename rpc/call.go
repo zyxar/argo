@@ -79,6 +79,11 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifer Notifie
 			}
 
 			if err = conn.ReadJSON(&request); err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
 				log.Printf("conn.ReadJSON|err:%v", err.Error())
 				continue
 			}
@@ -163,9 +168,15 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 			default:
 			}
 			var resp websocketResponse
+			w.conn.SetReadDeadline(time.Now().Add(timeout))
 			if err := conn.ReadJSON(&resp); err != nil {
 				if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
 					continue
+				}
+				select {
+				case <-ctx.Done():
+					return
+				default:
 				}
 				log.Printf("conn.ReadJSON|err:%v", err.Error())
 				return
@@ -198,6 +209,7 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 	go func() { // routine:send
 		defer wg.Done()
 		defer cancel()
+		defer w.conn.Close()
 
 		for {
 			select {
@@ -207,15 +219,13 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 					log.Printf("sending websocket close message: %v", err)
 				}
 				return
-			case req, ok := <-sendChan:
-				if !ok {
-					return
-				}
+			case req := <-sendChan:
 				processor.Add(req.request.Id, func(resp clientResponse) error {
 					err := resp.decode(req.reply)
 					req.cancel()
 					return err
 				})
+				w.conn.SetWriteDeadline(time.Now().Add(timeout))
 				w.conn.WriteJSON(req.request)
 			}
 		}
@@ -227,7 +237,6 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 func (w *websocketCaller) Close() (err error) {
 	w.once.Do(func() {
 		w.cancel()
-		err = w.conn.Close()
 		w.wg.Wait()
 	})
 	return
