@@ -1,7 +1,7 @@
 sudo: false
 language: go
 go:
-- "1.10.x"
+- "1.12.x"
 - "1.11.x"
 - master
 
@@ -15,6 +15,7 @@ before_script:
 - go get -v -u github.com/mailru/easyjson/...
 
 script:
+- aria2c --enable-rpc --rpc-listen-all &
 - go test -v ./rpc
 - go generate -v ./rpc
 - go test -v ./rpc

@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 )
@@ -11,20 +10,14 @@ func TestAll(t *testing.T) {
 	const targetURL = "https://nodejs.org/dist/index.json"
 	rpc, err := New(context.Background(), "http://localhost:6800/jsonrpc", "", time.Second, &DummyNotifier{})
 	if err != nil {
-		panic(err)
-	}
-	msg, err := rpc.LaunchAria2cDaemon()
-	if err != nil {
-		panic(err)
-	} else {
-		fmt.Println("aria2c", msg.Version, "started!")
+		t.Fatal(err)
 	}
 
 	g, err := rpc.AddURI(targetURL)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	fmt.Println(g)
+	println(g)
 	if _, err = rpc.TellActive(); err != nil {
 		t.Error(err)
 	}
@@ -70,5 +63,4 @@ func TestAll(t *testing.T) {
 	if _, err = rpc.TellActive(); err != nil {
 		t.Error(err)
 	}
-	fmt.Println(rpc.ForceShutdown())
 }

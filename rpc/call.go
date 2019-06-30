@@ -54,7 +54,6 @@ func newHTTPCaller(ctx context.Context, u *url.URL, timeout time.Duration, notif
 func (h *httpCaller) Close() (err error) {
 	h.once.Do(func() {
 		h.cancel()
-		h.c.CloseIdleConnections()
 		h.wg.Wait()
 	})
 	return
@@ -165,10 +164,10 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 			}
 			var resp websocketResponse
 			if err := conn.ReadJSON(&resp); err != nil {
-				log.Printf("conn.ReadJSON|err:%v", err.Error())
 				if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
 					continue
 				}
+				log.Printf("conn.ReadJSON|err:%v", err.Error())
 				return
 			}
 			if resp.Id == nil { // RPC notifications
