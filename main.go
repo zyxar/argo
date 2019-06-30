@@ -6,8 +6,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"time"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/zyxar/argo/rpc"
 )
 
@@ -15,6 +17,7 @@ var (
 	rpcc               rpc.Client
 	rpcSecret          string
 	rpcURI             string
+	launchLocal        bool
 	errParameter       = errors.New("invalid parameter")
 	errNotSupportedCmd = errors.New("not supported command")
 	errInvalidCmd      = errors.New("invalid command")
@@ -23,28 +26,35 @@ var (
 func init() {
 	flag.StringVar(&rpcSecret, "secret", "", "set --rpc-secret for aria2c")
 	flag.StringVar(&rpcURI, "uri", "http://localhost:6800/jsonrpc", "set rpc address")
+	flag.BoolVar(&launchLocal, "launch", false, "launch local aria2c daemon")
 }
 
 func main() {
 	flag.Parse()
+
+	if launchLocal {
+		if err := LaunchAria2cDaemon(rpcSecret); err != nil {
+			fmt.Fprintf(os.Stderr, "launch: %v", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	if flag.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "usage: argo {CMD} {PARAMETERS}...\n")
 		flag.PrintDefaults()
-		fmt.Fprintln(os.Stderr, "available cmds:")
-		k := 0
-		cmdlist := make([][3]string, len(cmds)/3+1)
+
+		tab := tablewriter.NewWriter(os.Stderr)
+		tab.SetHeader([]string{"available cmds:"})
 		for cmd := range cmds {
-			i := k / 3
-			j := k % 3
-			cmdlist[i][j] = cmd
-			k++
+			tab.Append([]string{cmd})
 		}
-		for i := range cmdlist {
-			fmt.Fprintf(os.Stderr, "\t%s\r\t\t\t\t%s\r\t\t\t\t\t\t\t\t%s\n", cmdlist[i][0], cmdlist[i][1], cmdlist[i][2])
-		}
+		fmt.Fprintln(os.Stderr)
+		tab.Render()
 		fmt.Fprintln(os.Stderr)
 		os.Exit(1)
 	}
+
 	var err error
 	rpcc, err = rpc.New(context.Background(), rpcURI, rpcSecret, time.Second, nil)
 	if err != nil {
@@ -61,4 +71,17 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
+}
+
+// LaunchAria2cDaemon launchs aria2 daemon to listen for RPC calls, locally.
+func LaunchAria2cDaemon(secret string) (err error) {
+	args := []string{"--enable-rpc", "--rpc-listen-all"}
+	if secret != "" {
+		args = append(args, "--rpc-secret="+secret)
+	}
+	cmd := exec.Command("aria2c", args...)
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	return cmd.Process.Release()
 }

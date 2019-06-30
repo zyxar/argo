@@ -7,14 +7,6 @@ import (
 
 var (
 	cmds = map[string](func(s ...string) error){
-		"launch": func(s ...string) (err error) {
-			o, err := rpcc.LaunchAria2cDaemon()
-			if err != nil {
-				return
-			}
-			fmt.Printf("%+v\n", o)
-			return
-		},
 		"adduri": func(s ...string) (err error) {
 			if len(s) == 0 {
 				err = errParameter

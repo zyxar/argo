@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/url"
-	"os/exec"
 	"time"
 )
 
@@ -15,7 +14,6 @@ type Option map[string]interface{}
 
 type Client interface {
 	Protocol
-	LaunchAria2cDaemon() (info VersionInfo, err error)
 	Close() error
 }
 
@@ -51,45 +49,6 @@ func New(ctx context.Context, uri string, token string, timeout time.Duration, n
 	}
 	c := &client{caller: caller, url: u, token: token}
 	return c, nil
-}
-
-// LaunchAria2cDaemon launchs aria2 daemon to listen for RPC calls, locally.
-func (c *client) LaunchAria2cDaemon() (info VersionInfo, err error) {
-	if info, err = c.GetVersion(); err == nil {
-		return
-	}
-	args := []string{"--enable-rpc", "--rpc-listen-all"}
-	if c.token != "" {
-		args = append(args, "--rpc-secret="+c.token)
-	}
-	cmd := exec.Command("aria2c", args...)
-	if err = cmd.Start(); err != nil {
-		return
-	}
-	cmd.Process.Release()
-	ctx, cancel := context.WithCancel(context.TODO())
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(time.Millisecond):
-			}
-			if info, err = c.GetVersion(); err == nil {
-				cancel()
-				return
-			}
-		}
-	}()
-
-	select {
-	case <-time.After(time.Second):
-		cancel()
-		return info, errConnTimeout
-	case <-ctx.Done():
-	}
-
-	return
 }
 
 // `aria2.addUri([secret, ]uris[, options[, position]])`
