@@ -89,17 +89,17 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, timeout time.Du
 			}
 			switch request.Method {
 			case "aria2.onDownloadStart":
-				notifer.OnStart(request.Params)
+				notifer.OnDownloadStart(request.Params)
 			case "aria2.onDownloadPause":
-				notifer.OnPause(request.Params)
+				notifer.OnDownloadPause(request.Params)
 			case "aria2.onDownloadStop":
-				notifer.OnStop(request.Params)
+				notifer.OnDownloadStop(request.Params)
 			case "aria2.onDownloadComplete":
-				notifer.OnComplete(request.Params)
+				notifer.OnDownloadComplete(request.Params)
 			case "aria2.onDownloadError":
-				notifer.OnError(request.Params)
+				notifer.OnDownloadError(request.Params)
 			case "aria2.onBtDownloadComplete":
-				notifer.OnBtComplete(request.Params)
+				notifer.OnBtDownloadComplete(request.Params)
 			default:
 				log.Printf("unexpected notification: %s", request.Method)
 			}
@@ -135,15 +135,6 @@ type websocketCaller struct {
 	wg       *sync.WaitGroup
 	once     sync.Once
 	timeout  time.Duration
-}
-
-// The RPC server might send notifications to the client.
-// Notifications is unidirectional, therefore the client which receives the notification must not respond to it.
-// The method signature of a notification is much like a normal method request but lacks the id key
-type websocketResponse struct {
-	clientResponse
-	Method string  `json:"method"`
-	Params []Event `json:"params"`
 }
 
 func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, notifier Notifier) (*websocketCaller, error) {
@@ -186,17 +177,17 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 				if notifier != nil {
 					switch resp.Method {
 					case "aria2.onDownloadStart":
-						notifier.OnStart(resp.Params)
+						notifier.OnDownloadStart(resp.Params)
 					case "aria2.onDownloadPause":
-						notifier.OnPause(resp.Params)
+						notifier.OnDownloadPause(resp.Params)
 					case "aria2.onDownloadStop":
-						notifier.OnStop(resp.Params)
+						notifier.OnDownloadStop(resp.Params)
 					case "aria2.onDownloadComplete":
-						notifier.OnComplete(resp.Params)
+						notifier.OnDownloadComplete(resp.Params)
 					case "aria2.onDownloadError":
-						notifier.OnError(resp.Params)
+						notifier.OnDownloadError(resp.Params)
 					case "aria2.onBtDownloadComplete":
-						notifier.OnBtComplete(resp.Params)
+						notifier.OnBtDownloadComplete(resp.Params)
 					default:
 						log.Printf("unexpected notification: %s", resp.Method)
 					}
