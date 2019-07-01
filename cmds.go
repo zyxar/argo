@@ -2,7 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strconv"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/zyxar/argo/rpc"
 )
 
 var (
@@ -136,7 +141,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderStatusInfo(os.Stdout, msg)
 			return
 		},
 		"geturis": func(s ...string) (err error) {
@@ -148,7 +153,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderURIInfo(os.Stdout, msg...)
 			return
 		},
 		"getfiles": func(s ...string) (err error) {
@@ -160,7 +165,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderFileInfo(os.Stdout, msg...)
 			return
 		},
 		"getpeers": func(s ...string) (err error) {
@@ -172,7 +177,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderPeerInfo(os.Stdout, msg...)
 			return
 		},
 		"getservers": func(s ...string) (err error) {
@@ -184,7 +189,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderServerInfo(os.Stdout, msg...)
 			return
 		},
 		"tellactive": func(s ...string) (err error) {
@@ -192,7 +197,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderStatusInfo(os.Stdout, msg...)
 			return
 		},
 		"tellwaiting": func(s ...string) (err error) {
@@ -210,7 +215,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderStatusInfo(os.Stdout, msg...)
 			return
 		},
 		"tellstopped": func(s ...string) (err error) {
@@ -228,7 +233,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderStatusInfo(os.Stdout, msg...)
 			return
 		},
 		"changeposition": func(s ...string) (err error) {
@@ -284,7 +289,7 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderGlobalStatInfo(os.Stdout, msg)
 			return
 		},
 		"purgeresult": func(s ...string) (err error) {
@@ -356,8 +361,126 @@ var (
 			if err != nil {
 				return
 			}
-			fmt.Printf("%+v\n", msg)
+			renderCmdList(os.Stdout, msg...)
 			return
 		},
 	}
 )
+
+func renderStatusInfo(w io.Writer, i ...rpc.StatusInfo) {
+	tab := tablewriter.NewWriter(w)
+	tab.SetHeader([]string{"gid", "status", "totalLength", "completedLength", "uploadLength", "bitfield", "downloadSpeed", "uploadSpeed"})
+	for _, info := range i {
+		tab.Append([]string{
+			info.Gid,
+			info.Status,
+			info.TotalLength,
+			info.CompletedLength,
+			info.UploadLength,
+			info.BitField,
+			info.DownloadSpeed,
+			info.UploadSpeed,
+		})
+	}
+	tab.Render()
+	fmt.Fprintln(w)
+}
+
+func renderURIInfo(w io.Writer, i ...rpc.URIInfo) {
+	tab := tablewriter.NewWriter(w)
+	tab.SetHeader([]string{"uri", "status"})
+	for _, info := range i {
+		tab.Append([]string{
+			info.URI,
+			info.Status,
+		})
+	}
+	tab.Render()
+	fmt.Fprintln(w)
+}
+
+func renderFileInfo(w io.Writer, i ...rpc.FileInfo) {
+	tab := tablewriter.NewWriter(w)
+	tab.SetAutoMergeCells(true)
+	tab.SetHeader([]string{"index", "path", "length", "completed", "selected", "uri", "status"})
+	for _, info := range i {
+		for _, uri := range info.URIs {
+			tab.Append([]string{
+				info.Index,
+				info.Path,
+				info.Length,
+				info.CompletedLength,
+				info.Selected,
+				uri.URI,
+				uri.Status,
+			})
+		}
+	}
+	tab.Render()
+	fmt.Fprintln(w)
+}
+
+func renderPeerInfo(w io.Writer, i ...rpc.PeerInfo) {
+	tab := tablewriter.NewWriter(w)
+	tab.SetHeader([]string{"peerId", "ip", "port", "bitfield", "amChoking", "peerChoking", "downloadSpeed", "uploadSpeed", "seeder"})
+	for _, info := range i {
+		tab.Append([]string{
+			info.PeerId,
+			info.IP,
+			info.Port,
+			info.BitField,
+			info.AmChoking,
+			info.PeerChoking,
+			info.DownloadSpeed,
+			info.UploadSpeed,
+			info.Seeder,
+		})
+	}
+	tab.Render()
+	fmt.Fprintln(w)
+}
+
+func renderServerInfo(w io.Writer, i ...rpc.ServerInfo) {
+	tab := tablewriter.NewWriter(w)
+	tab.SetAutoMergeCells(true)
+	tab.SetHeader([]string{"index", "uri", "currentUri", "downloadSpeed"})
+	for _, info := range i {
+		for _, srv := range info.Servers {
+			tab.Append([]string{
+				info.Index,
+				srv.URI,
+				srv.CurrentURI,
+				srv.DownloadSpeed,
+			})
+		}
+	}
+	tab.Render()
+	fmt.Fprintln(w)
+}
+
+func renderGlobalStatInfo(w io.Writer, info rpc.GlobalStatInfo) {
+	tab := tablewriter.NewWriter(w)
+	tab.SetHeader([]string{"downloadSpeed", "uploadSpeed", "numActive", "numWaiting", "numStopped", "numStoppedTotal"})
+	tab.Append([]string{
+		info.DownloadSpeed,
+		info.UploadSpeed,
+		info.NumActive,
+		info.NumWaiting,
+		info.NumStopped,
+		info.NumStoppedTotal,
+	})
+	tab.Render()
+	fmt.Fprintln(w)
+}
+
+func renderCmdList(w io.Writer, cmds ...string) {
+	tab := tablewriter.NewWriter(w)
+	for i := 0; i < len(cmds)/2; i++ {
+		tab.Append([]string{cmds[2*i], "", cmds[2*i+1]})
+	}
+	if len(cmds)%2 != 0 {
+		tab.Append([]string{cmds[len(cmds)-1], "", ""})
+	}
+	tab.Render()
+	fmt.Fprintln(w)
+}

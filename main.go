@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/zyxar/argo/rpc"
 )
 
@@ -43,15 +42,12 @@ func main() {
 	if flag.NArg() == 0 {
 		fmt.Fprintf(os.Stderr, "usage: argo {CMD} {PARAMETERS}...\n")
 		flag.PrintDefaults()
-
-		tab := tablewriter.NewWriter(os.Stderr)
-		tab.SetHeader([]string{"available cmds:"})
+		fmt.Fprintln(os.Stderr)
+		c := make([]string, 0, len(cmds))
 		for cmd := range cmds {
-			tab.Append([]string{cmd})
+			c = append(c, cmd)
 		}
-		fmt.Fprintln(os.Stderr)
-		tab.Render()
-		fmt.Fprintln(os.Stderr)
+		renderCmdList(os.Stderr, c...)
 		os.Exit(1)
 	}
 
