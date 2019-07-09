@@ -46,7 +46,7 @@ func newHTTPCaller(ctx context.Context, u *url.URL, timeout time.Duration, notif
 	ctx, cancel := context.WithCancel(ctx)
 	h := &httpCaller{uri: u.String(), c: c, cancel: cancel, wg: &wg}
 	if notifer != nil {
-		h.setNotifier(ctx, *u, timeout, notifer)
+		h.setNotifier(ctx, *u, notifer)
 	}
 	return h
 }
@@ -59,7 +59,7 @@ func (h *httpCaller) Close() (err error) {
 	return
 }
 
-func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, timeout time.Duration, notifer Notifier) (err error) {
+func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, notifer Notifier) (err error) {
 	u.Scheme = "ws"
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -69,6 +69,19 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, timeout time.Du
 	go func() {
 		defer h.wg.Done()
 		defer conn.Close()
+		select {
+		case <-ctx.Done():
+			conn.SetWriteDeadline(time.Now().Add(time.Second))
+			if err := conn.WriteMessage(websocket.CloseMessage,
+				websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")); err != nil {
+				log.Printf("sending websocket close message: %v", err)
+			}
+			return
+		}
+	}()
+	h.wg.Add(1)
+	go func() {
+		defer h.wg.Done()
 		var request websocketResponse
 		var err error
 		for {
@@ -77,7 +90,6 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, timeout time.Du
 				return
 			default:
 			}
-			conn.SetReadDeadline(time.Now().Add(timeout))
 			if err = conn.ReadJSON(&request); err != nil {
 				select {
 				case <-ctx.Done():
@@ -85,7 +97,7 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, timeout time.Du
 				default:
 				}
 				log.Printf("conn.ReadJSON|err:%v", err.Error())
-				continue
+				return
 			}
 			switch request.Method {
 			case "aria2.onDownloadStart":
@@ -103,12 +115,6 @@ func (h *httpCaller) setNotifier(ctx context.Context, u url.URL, timeout time.Du
 			default:
 				log.Printf("unexpected notification: %s", request.Method)
 			}
-		}
-		conn.SetWriteDeadline(time.Now().Add(timeout))
-		err = conn.WriteMessage(websocket.CloseMessage,
-			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-		if err != nil {
-			log.Printf("sending websocket close message: %v", err)
 		}
 	}()
 	return
@@ -160,11 +166,7 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 			default:
 			}
 			var resp websocketResponse
-			w.conn.SetReadDeadline(time.Now().Add(timeout))
 			if err := conn.ReadJSON(&resp); err != nil {
-				if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
-					continue
-				}
 				select {
 				case <-ctx.Done():
 					return
