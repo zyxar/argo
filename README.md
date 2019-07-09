@@ -18,7 +18,7 @@ aria2 RPC in #Go
 ```go
   AddURI(uri string, options ...interface{}) (gid string, err error)
   AddTorrent(filename string, options ...interface{}) (gid string, err error)
-  AddMetalink(uri string, options ...interface{}) (gid string, err error)
+  AddMetalink(filename string, options ...interface{}) (gid []string, err error)
   Remove(gid string) (msg string, err error)
   ForceRemove(gid string) (msg string, err error)
   Pause(gid string) (msg string, err error)
