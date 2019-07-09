@@ -98,7 +98,7 @@ func (c *client) AddTorrent(filename string, options ...interface{}) (gid string
 	if c.token != "" {
 		params = append(params, "token:"+c.token)
 	}
-	params = append(params, []string{string(file)})
+	params = append(params, file)
 	if options != nil {
 		params = append(params, options...)
 	}
