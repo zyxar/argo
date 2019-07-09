@@ -369,7 +369,7 @@ var (
 
 func renderStatusInfo(w io.Writer, i ...rpc.StatusInfo) {
 	tab := tablewriter.NewWriter(w)
-	tab.SetHeader([]string{"gid", "status", "totalLength", "completedLength", "uploadLength", "bitfield", "downloadSpeed", "uploadSpeed"})
+	tab.SetHeader([]string{"gid", "status", "totalLength", "completedLength", "uploadLength", "downloadSpeed", "uploadSpeed"})
 	for _, info := range i {
 		tab.Append([]string{
 			info.Gid,
@@ -377,7 +377,6 @@ func renderStatusInfo(w io.Writer, i ...rpc.StatusInfo) {
 			info.TotalLength,
 			info.CompletedLength,
 			info.UploadLength,
-			info.BitField,
 			info.DownloadSpeed,
 			info.UploadSpeed,
 		})

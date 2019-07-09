@@ -27,7 +27,7 @@ type StatusInfo struct {
 	BitTorrent      struct {
 		AnnounceList [][]string `json:"announceList"` // List of lists of announce URIs. If the torrent contains announce and no announce-list, announce is converted to the announce-list format.
 		Comment      string     `json:"comment"`      // The comment of the torrent. comment.utf-8 is used if available.
-		CreationDate string     `json:"creationDate"` // The creation time of the torrent. The value is an integer since the epoch, measured in seconds.
+		CreationDate int64      `json:"creationDate"` // The creation time of the torrent. The value is an integer since the epoch, measured in seconds.
 		Mode         string     `json:"mode"`         // File mode of the torrent. The value is either single or multi.
 		Info         struct {
 			Name string `json:"name"` // name in info dictionary. name.utf-8 is used if available.
