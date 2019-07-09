@@ -118,12 +118,17 @@ func (c *client) AddTorrent(filename string, options ...interface{}) (gid string
 // E.g. a file name might be 0a3893293e27ac0490424c06de4d09242215f0a6.metalink.
 // If a file with the same name already exists, it is overwritten!
 // If the file cannot be saved successfully or --rpc-save-upload-metadata is false, the downloads added by this method are not saved by --save-session.
-func (c *client) AddMetalink(uri string, options ...interface{}) (gid string, err error) {
+func (c *client) AddMetalink(filename string, options ...interface{}) (gid []string, err error) {
+	co, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return
+	}
+	file := base64.StdEncoding.EncodeToString(co)
 	params := make([]interface{}, 0, 2)
 	if c.token != "" {
 		params = append(params, "token:"+c.token)
 	}
-	params = append(params, []string{uri})
+	params = append(params, file)
 	if options != nil {
 		params = append(params, options...)
 	}
