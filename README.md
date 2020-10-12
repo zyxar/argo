@@ -7,16 +7,14 @@ argo/rpc
 
 aria2 RPC in #Go
 
-
 ## Install
 
 `go get github.com/zyxar/argo/rpc`
 
-
 ## Interface
 
 ```go
-  AddURI(uri string, options ...interface{}) (gid string, err error)
+  AddURI(uris []string, options ...interface{}) (gid string, err error)
   AddTorrent(filename string, options ...interface{}) (gid string, err error)
   AddMetalink(filename string, options ...interface{}) (gid []string, err error)
   Remove(gid string) (msg string, err error)

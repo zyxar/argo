@@ -13,7 +13,7 @@ func TestHTTPAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer rpc.Close()
-	g, err := rpc.AddURI(targetURL)
+	g, err := rpc.AddURI([]string{targetURL})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestWebsocketAll(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer rpc.Close()
-	g, err := rpc.AddURI(targetURL)
+	g, err := rpc.AddURI([]string{targetURL})
 	if err != nil {
 		t.Fatal(err)
 	}
