@@ -60,12 +60,12 @@ func New(ctx context.Context, uri string, token string, timeout time.Duration, n
 // The new download will be inserted at position in the waiting queue.
 // If position is omitted or position is larger than the current size of the queue, the new download is appended to the end of the queue.
 // This method returns the GID of the newly registered download.
-func (c *client) AddURI(uri string, options ...interface{}) (gid string, err error) {
+func (c *client) AddURI(uris []string, options ...interface{}) (gid string, err error) {
 	params := make([]interface{}, 0, 2)
 	if c.token != "" {
 		params = append(params, "token:"+c.token)
 	}
-	params = append(params, []string{uri})
+	params = append(params, uris)
 	if options != nil {
 		params = append(params, options...)
 	}
@@ -642,7 +642,7 @@ func (c *client) Multicall(methods []Method) (r []interface{}, err error) {
 		err = errInvalidParameter
 		return
 	}
-	err = c.Call(aria2Multicall, methods, &r)
+	err = c.Call(aria2Multicall, []interface{}{methods}, &r)
 	return
 }
 

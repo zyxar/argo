@@ -1,5 +1,7 @@
 module github.com/zyxar/argo
 
+go 1.15
+
 require (
 	github.com/gorilla/websocket v1.4.0
 	github.com/mailru/easyjson v0.0.0-20180730094502-03f2033d19d5

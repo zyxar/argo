@@ -17,7 +17,7 @@ var (
 				err = errParameter
 				return
 			}
-			gid, err := rpcc.AddURI(s[0])
+			gid, err := rpcc.AddURI(s)
 			if err != nil {
 				return
 			}
