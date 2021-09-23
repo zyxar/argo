@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"io/ioutil"
 )
 
 // ----------------------------------------------------------------------------
@@ -79,8 +80,13 @@ func (c clientResponse) decode(reply interface{}) error {
 // DecodeClientResponse decodes the response body of a client request into
 // the interface reply.
 func DecodeClientResponse(r io.Reader, reply interface{}) error {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+	}
 	var c clientResponse
-	if err := json.NewDecoder(r).Decode(&c); err != nil {
+	err = json.Unmarshal(b, &c)
+	if err != nil {
 		return err
 	}
 	return c.decode(reply)
