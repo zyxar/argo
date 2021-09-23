@@ -94,11 +94,12 @@ func (c *client) AddTorrent(filename string, options ...interface{}) (gid string
 		return
 	}
 	file := base64.StdEncoding.EncodeToString(co)
-	params := make([]interface{}, 0, 2)
+	params := make([]interface{}, 0, 3)
 	if c.token != "" {
 		params = append(params, "token:"+c.token)
 	}
 	params = append(params, file)
+	params = append(params, []interface{}{})
 	if options != nil {
 		params = append(params, options...)
 	}
