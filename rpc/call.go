@@ -177,22 +177,24 @@ func newWebsocketCaller(ctx context.Context, uri string, timeout time.Duration, 
 			}
 			if resp.Id == nil { // RPC notifications
 				if notifier != nil {
-					switch resp.Method {
-					case "aria2.onDownloadStart":
-						notifier.OnDownloadStart(resp.Params)
-					case "aria2.onDownloadPause":
-						notifier.OnDownloadPause(resp.Params)
-					case "aria2.onDownloadStop":
-						notifier.OnDownloadStop(resp.Params)
-					case "aria2.onDownloadComplete":
-						notifier.OnDownloadComplete(resp.Params)
-					case "aria2.onDownloadError":
-						notifier.OnDownloadError(resp.Params)
-					case "aria2.onBtDownloadComplete":
-						notifier.OnBtDownloadComplete(resp.Params)
-					default:
-						log.Printf("unexpected notification: %s", resp.Method)
-					}
+					go func() {
+						switch resp.Method {
+						case "aria2.onDownloadStart":
+							notifier.OnDownloadStart(resp.Params)
+						case "aria2.onDownloadPause":
+							notifier.OnDownloadPause(resp.Params)
+						case "aria2.onDownloadStop":
+							notifier.OnDownloadStop(resp.Params)
+						case "aria2.onDownloadComplete":
+							notifier.OnDownloadComplete(resp.Params)
+						case "aria2.onDownloadError":
+							notifier.OnDownloadError(resp.Params)
+						case "aria2.onBtDownloadComplete":
+							notifier.OnBtDownloadComplete(resp.Params)
+						default:
+							log.Printf("unexpected notification: %s", resp.Method)
+						}
+					}()
 				}
 				continue
 			}
